@@ -1,11 +1,11 @@
-import usersessionService from "../service/usersession-service.js";
+import sessionService from "../service/session-service.js";
 
 const postSession = async (req, res, next) => {
     try {
         req.body.userAgent = req.headers["user-agent"];
         req.body.ipAddress = req.ip;
 
-        const result = await usersessionService.postSession(req.body);
+        const result = await sessionService.postSession(req.body);
 
         res.cookie("refresh_token", result.refresh_token, {
             httpOnly: true,
@@ -23,12 +23,24 @@ const postSession = async (req, res, next) => {
     }
 };
 
+const getSession = async (req, res, next) => {
+    try {
+        const result = await sessionService.getSession(req.body);
+
+        res.status(200).json({
+            data: result,
+        });
+    } catch (e) {
+        next(e);
+    }
+};
+
 const postSessionRefresh = async (req, res, next) => {
     try {
         req.body.userAgent = req.headers["user-agent"];
         req.body.ipAddress = req.ip;
 
-        const result = await usersessionService.postSessionRefresh(req.headers, req.body);
+        const result = await sessionService.postSessionRefresh(req.headers, req.body);
 
         res.cookie("refresh_token", result.refresh_token, {
             httpOnly: true,
@@ -48,7 +60,7 @@ const postSessionRefresh = async (req, res, next) => {
 
 const deleteSession = async (req, res, next) => {
     try {
-        const result = await usersessionService.deleteSession(req.headers, req.body);
+        const result = await sessionService.deleteSession(req.headers, req.body);
 
         res.clearCookie("refresh_token");
         // Hapus accesstoken di frontend
@@ -63,7 +75,7 @@ const deleteSession = async (req, res, next) => {
 
 const deleteSessionAll = async (req, res, next) => {
     try {
-        const result = await usersessionService.deleteSessionAll(req.body);
+        const result = await sessionService.deleteSessionAll(req.body);
 
         res.clearCookie("refresh_token");
         // Hapus accesstoken di frontend
@@ -78,6 +90,7 @@ const deleteSessionAll = async (req, res, next) => {
 
 export default {
     postSession,
+    getSession,
     postSessionRefresh,
     deleteSession,
     deleteSessionAll,

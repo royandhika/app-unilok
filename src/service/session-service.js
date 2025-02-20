@@ -2,7 +2,7 @@ import { and, eq } from "drizzle-orm";
 import { userSessions, users } from "../app/db-schema.js";
 import { db } from "../app/db.js";
 import bcrypt from "bcrypt";
-import { signToken, validate, verifyToken } from "../util/utility.js";
+import { signToken, validate } from "../util/utility.js";
 import { loginValidation } from "../validation/usersession-validation.js";
 import { ResponseError } from "../error/response-error.js";
 
@@ -48,6 +48,17 @@ const postSession = async (body) => {
     response.access_token = accessToken;
 
     return response;
+};
+
+const getSession = async (body) => {
+    const result = await db
+        .select
+        // Tambahin kolom, jangan semua diambil
+        ()
+        .from(userSessions)
+        .where(and(eq(userSessions.user_id, body.user_id), eq(userSessions.is_active, 1)));
+
+    return result;
 };
 
 const postSessionRefresh = async (header, body) => {
@@ -138,6 +149,7 @@ const deleteSessionAll = async (body) => {
 
 export default {
     postSession,
+    getSession,
     postSessionRefresh,
     deleteSession,
     deleteSessionAll,
