@@ -48,9 +48,35 @@ const postUserAddress = async (req, res, next) => {
     }
 };
 
+const getUserAddress = async (req, res, next) => {
+    try {
+        const result = await userService.getUserAddress(req.body);
+
+        res.status(200).json({
+            data: result,
+        });
+    } catch (e) {
+        next(e);
+    }
+};
+
+const getUserAddressId = async (req, res, next) => {
+    try {
+        const result = await userService.getUserAddressId(req.params, req.body);
+
+        res.status(200).json({
+            data: result,
+        });
+    } catch (e) {
+        next(e);
+    }
+};
+
 export default {
     postUser,
     getUserProfile,
     patchUserProfile,
     postUserAddress,
+    getUserAddress,
+    getUserAddressId,
 };
