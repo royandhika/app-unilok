@@ -107,12 +107,14 @@ const patchUserProfile = async (body) => {
         .select({
             id: userProfiles.id,
             user_id: userProfiles.user_id,
+            username: users.username,
             avatar: userProfiles.avatar,
             full_name: userProfiles.full_name,
             birthdate: userProfiles.birthdate,
             gender: userProfiles.gender,
         })
         .from(userProfiles)
+        .leftJoin(users, eq(userProfiles.user_id, users.id))
         .where(eq(userProfiles.user_id, body.user_id));
 
     return response;
