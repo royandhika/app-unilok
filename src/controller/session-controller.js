@@ -60,7 +60,7 @@ const postSessionRefresh = async (req, res, next) => {
 
 const deleteSession = async (req, res, next) => {
     try {
-        const response = await sessionService.deleteSession(req.headers, req.body);
+        const response = await sessionService.deleteSession(req.headers);
 
         res.clearCookie("refresh_token");
         // Hapus accesstoken di frontend

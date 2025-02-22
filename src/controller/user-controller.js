@@ -6,6 +6,19 @@ const postUser = async (req, res, next) => {
 
         res.status(200).json({
             data: response,
+            message: "Register success",
+        });
+    } catch (e) {
+        next(e);
+    }
+};
+
+const patchUser = async (req, res, next) => {
+    try {
+        const response = await userService.patchUser(req.body);
+
+        res.status(200).json({
+            data: response,
         });
     } catch (e) {
         next(e);
@@ -74,6 +87,7 @@ const getUserAddressId = async (req, res, next) => {
 
 export default {
     postUser,
+    patchUser,
     getUserProfile,
     patchUserProfile,
     postUserAddress,

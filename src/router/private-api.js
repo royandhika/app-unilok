@@ -7,6 +7,7 @@ import productController from "../controller/product-controller.js";
 const privateRouter = new express.Router();
 privateRouter.use(authMiddleware);
 // users
+privateRouter.patch("/v1/users", userController.patchUser);
 privateRouter.get("/v1/users/me/profiles", userController.getUserProfile);
 privateRouter.patch("/v1/users/me/profiles", userController.patchUserProfile);
 privateRouter.post("/v1/users/me/addresses", userController.postUserAddress);

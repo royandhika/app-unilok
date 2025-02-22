@@ -1,7 +1,7 @@
 import Joi from "joi";
 
 // Ini bikin 'schema' joi
-const registerValidation = Joi.object({
+const postUserValidation = Joi.object({
     username: Joi.string().max(20).required(),
     password: Joi.string()
         .max(20)
@@ -11,6 +11,11 @@ const registerValidation = Joi.object({
     phone: Joi.string().max(20).pattern(new RegExp("^[0-9]+$")).optional(),
 });
 
+const patchUserValidation = Joi.object({
+    email: Joi.string().max(30).email({ minDomainSegments: 2 }).optional(),
+    phone: Joi.string().max(20).pattern(new RegExp("^[0-9]+$")).optional(),
+}).unknown();
+
 const updateValidation = Joi.object({
     avatar: Joi.string().max(255).optional(),
     full_name: Joi.string().max(50).pattern(new RegExp("^[A-Za-zÀ-ÖØ-öø-ÿ]+([ '-][A-Za-zÀ-ÖØ-öø-ÿ]+)*$")).required(),
@@ -18,4 +23,4 @@ const updateValidation = Joi.object({
     gender: Joi.string().required(),
 }).unknown();
 
-export { registerValidation, updateValidation };
+export { postUserValidation, patchUserValidation, updateValidation };

@@ -182,6 +182,36 @@ export const productReviews = mysqlTable("product_reviews", {
 });
 
 // RELATIONS
+export const usersRelations = relations(users, ({ one, many }) => ({
+    userProfiles: one(userProfiles),
+    userProfiles: many(userProfiles),
+    userSessions: many(userSessions),
+    productReviews: many(productReviews),
+    orders: many(orders),
+}));
+
+export const userProfilesRelations = relations(userProfiles, ({ one }) => ({
+    users: one(users, {
+        fields: [userProfiles.user_id],
+        references: [users.id],
+    }),
+}));
+
+export const userAddressesRelations = relations(userAddresses, ({ one, many }) => ({
+    users: one(users, {
+        fields: [userAddresses.user_id],
+        references: [users.id],
+    }),
+    orders: many(orders),
+}));
+
+export const userSessionsRelations = relations(userSessions, ({ one }) => ({
+    users: one(users, {
+        fields: [userSessions.user_id],
+        references: [users.id],
+    }),
+}));
+
 export const productRelations = relations(products, ({ many }) => ({
     productImages: many(productImages),
     productVariants: many(productVariants),
@@ -194,7 +224,11 @@ export const productImagesRelations = relations(productImages, ({ one }) => ({
     }),
 }));
 
-export const productVariantsRelations = relations(productVariants, ({ one }) => ({
+export const coloursRelations = relations(colours, ({ many }) => ({
+    productVariants: many(productVariants),
+}));
+
+export const productVariantsRelations = relations(productVariants, ({ one, many }) => ({
     product: one(products, {
         fields: [productVariants.product_id],
         references: [products.id],
@@ -203,8 +237,40 @@ export const productVariantsRelations = relations(productVariants, ({ one }) => 
         fields: [productVariants.colour_id],
         references: [colours.id],
     }),
+    orderItems: many(orderItems),
 }));
 
-export const coloursRelations = relations(colours, ({ many }) => ({
-    productVariants: many(productVariants),
+export const ordersRelations = relations(orders, ({ one, many }) => ({
+    users: one(users, {
+        fields: [orders.user_id],
+        references: [users.id],
+    }),
+    userAddresses: one(userAddresses, {
+        fields: [orders.address_id],
+        references: [userAddresses.id],
+    }),
+    orderItems: many(orderItems),
+}));
+
+export const orderItemsRelations = relations(orderItems, ({ one }) => ({
+    orders: one(orders, {
+        fields: [orderItems.order_id],
+        references: [orders.id],
+    }),
+    productVariants: one(productVariants, {
+        fields: [orderItems.product_variant_id],
+        references: [productVariants.id],
+    }),
+    productReviews: one(productReviews),
+}));
+
+export const productReviewsRelations = relations(productReviews, ({ one }) => ({
+    users: one(users, {
+        fields: [productReviews.user_id],
+        references: [users.id],
+    }),
+    orderItems: one(orderItems, {
+        fields: [productReviews.order_item_id],
+        references: [orderItems.id],
+    }),
 }));

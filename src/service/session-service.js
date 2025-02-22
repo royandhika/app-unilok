@@ -52,9 +52,13 @@ const postSession = async (body) => {
 
 const getSession = async (body) => {
     const result = await db
-        .select
-        // Tambahin kolom, jangan semua diambil
-        ()
+        .select({
+            id: userSessions.id,
+            user_id: userSessions.user_id,
+            user_agent: userSessions.user_agent,
+            ip_address: userSessions.ip_address,
+            is_active: userSessions.is_active,
+        })
         .from(userSessions)
         .where(
             and(
@@ -68,12 +72,6 @@ const getSession = async (body) => {
 };
 
 const postSessionRefresh = async (header, body) => {
-    // const requestUsername = cookie.refresh_token
-    //     ? await verifyToken(cookie.refresh_token)
-    //     : await verifyToken(body.refresh_token);
-    // const requestRefreshToken = cookie.refresh_token ? cookie.refresh_token : body.refresh_token;
-
-    // if (!requestUsername) throw new ResponseError(401, "Refresh token invalid");
     const requestRefreshToken = header["authorization"]?.split(" ")[1];
     body.id = body.user_id;
 
@@ -122,7 +120,7 @@ const postSessionRefresh = async (header, body) => {
     return response;
 };
 
-const deleteSession = async (header, body) => {
+const deleteSession = async (header) => {
     const requestRefreshToken = header["authorization"]?.split(" ")[1];
 
     const [isValidRefreshToken] = await db

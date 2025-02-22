@@ -1,4 +1,4 @@
-import { asc, desc, sql, eq, and, like, count } from "drizzle-orm";
+import { asc, desc, eq, and, like } from "drizzle-orm";
 import { colours, productImages, productVariants, products } from "../app/db-schema.js";
 import { db } from "../app/db.js";
 import { ResponseError } from "../error/response-error.js";
@@ -90,7 +90,7 @@ const getProduct = async (query) => {
     const count = await queries;
     const totalItems = `${count.length}`;
     const totalPages = `${Math.ceil(count.length / limit)}`;
-    
+
     if (limit && offset) {
         queries = queries.limit(parseInt(limit));
         queries = queries.offset(parseInt(offset));

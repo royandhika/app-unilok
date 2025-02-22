@@ -2,12 +2,12 @@ import { db } from "../app/db.js";
 import bcrypt from "bcrypt";
 import { users, userProfiles, userAddresses } from "../app/db-schema.js";
 import { validate } from "../util/utility.js";
-import { registerValidation } from "../validation/user-validation.js";
+import { patchUserValidation, postUserValidation } from "../validation/user-validation.js";
 import { ResponseError } from "../error/response-error.js";
 import { eq, and } from "drizzle-orm";
 
 const postUser = async (body) => {
-    const request = validate(registerValidation, body);
+    const request = validate(postUserValidation, body);
 
     const [usernameExist] = await db
         .select({
@@ -34,11 +34,54 @@ const postUser = async (body) => {
     return response;
 };
 
+const patchUser = async (body) => {
+    const request = validate(patchUserValidation, body);
+
+    if (request.email) {
+        await db
+            .update(users)
+            .set({
+                email: request.email,
+                verified_email: 0,
+            })
+            .where(eq(users.id, request.user_id));
+    }
+
+    if (request.phone) {
+        await db
+            .update(users)
+            .set({
+                phone: request.phone,
+                verified_phone: 0,
+            })
+            .where(eq(users.id, request.user_id));
+    }
+
+    const [response] = await db
+        .select({
+            id: users.id,
+            username: users.username,
+            email: users.email,
+            verified_email: users.verified_email,
+            phone: users.phone,
+            verified_phone: users.verified_phone,
+        })
+        .from(users)
+        .where(eq(users.id, request.user_id));
+
+    return response;
+};
+
 const getUserProfile = async (body) => {
     const [response] = await db
-        .select
-        // Tambahin kolom, jangan semua diambil
-        ()
+        .select({
+            id: userProfiles.id,
+            user_id: userProfiles.user_id,
+            avatar: userProfiles.avatar,
+            full_name: userProfiles.full_name,
+            birthdate: userProfiles.birthdate,
+            gender: userProfiles.gender,
+        })
         .from(userProfiles)
         .where(eq(userProfiles.user_id, body.user_id));
 
@@ -59,9 +102,14 @@ const patchUserProfile = async (body) => {
         .where(eq(userProfiles.user_id, body.user_id));
 
     const [response] = await db
-        .select
-        // Tambahin kolom, jangan semua diambil
-        ()
+        .select({
+            id: userProfiles.id,
+            user_id: userProfiles.user_id,
+            avatar: userProfiles.avatar,
+            full_name: userProfiles.full_name,
+            birthdate: userProfiles.birthdate,
+            gender: userProfiles.gender,
+        })
         .from(userProfiles)
         .where(eq(userProfiles.user_id, body.user_id));
 
@@ -101,9 +149,20 @@ const postUserAddress = async (body) => {
 
 const getUserAddress = async (body) => {
     const response = await db
-        .select
-        // Tambahin kolom, jangan semua diambil
-        ()
+        .select({
+            id: userAddresses.id,
+            user_id: userAddresses.user_id,
+            name: userAddresses.name,
+            phone: userAddresses.phone,
+            address: userAddresses.address,
+            postal_code: userAddresses.postal_code,
+            district: userAddresses.district,
+            city: userAddresses.city,
+            province: userAddresses.province,
+            notes: userAddresses.notes,
+            is_default: userAddresses.is_default,
+            flag: userAddresses.flag,
+        })
         .from(userAddresses)
         .where(eq(userAddresses.user_id, body.user_id));
 
@@ -112,9 +171,20 @@ const getUserAddress = async (body) => {
 
 const getUserAddressId = async (param, body) => {
     const [response] = await db
-        .select
-        // Tambahin kolom, jangan semua diambil
-        ()
+        .select({
+            id: userAddresses.id,
+            user_id: userAddresses.user_id,
+            name: userAddresses.name,
+            phone: userAddresses.phone,
+            address: userAddresses.address,
+            postal_code: userAddresses.postal_code,
+            district: userAddresses.district,
+            city: userAddresses.city,
+            province: userAddresses.province,
+            notes: userAddresses.notes,
+            is_default: userAddresses.is_default,
+            flag: userAddresses.flag,
+        })
         .from(userAddresses)
         .where(and(eq(userAddresses.user_id, body.user_id), eq(userAddresses.id, param.id)));
 
@@ -125,6 +195,7 @@ const getUserAddressId = async (param, body) => {
 
 export default {
     postUser,
+    patchUser,
     getUserProfile,
     patchUserProfile,
     postUserAddress,
