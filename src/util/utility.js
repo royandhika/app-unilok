@@ -19,7 +19,8 @@ const validate = (schema, request) => {
 };
 
 const signToken = async (payload, type) => {
-    const expiresIn = type === "refresh" ? "48h" : type === "access" ? "5m" : undefined;
+    const expiresIn = type === "refresh" ? "30d" 
+        : type === "access" ? "1d" : undefined;
 
     // Payloadnya butuh id & username
     const token = jwt.sign(

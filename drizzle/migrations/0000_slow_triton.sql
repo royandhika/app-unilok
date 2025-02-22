@@ -105,6 +105,7 @@ CREATE TABLE `user_sessions` (
 	`user_agent` varchar(50) NOT NULL,
 	`ip_address` varchar(20) NOT NULL,
 	`is_active` tinyint NOT NULL,
+	`expires_at` timestamp NOT NULL DEFAULT (CURRENT_TIMESTAMP + INTERVAL 30 DAY),
 	`created_at` timestamp NOT NULL DEFAULT (now()),
 	`updated_at` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
 	CONSTRAINT `user_sessions_id` PRIMARY KEY(`id`)

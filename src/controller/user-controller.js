@@ -2,10 +2,10 @@ import userService from "../service/user-service.js";
 
 const postUser = async (req, res, next) => {
     try {
-        const result = await userService.postUser(req.body);
+        const response = await userService.postUser(req.body);
 
         res.status(200).json({
-            data: result,
+            data: response,
         });
     } catch (e) {
         next(e);
@@ -14,10 +14,10 @@ const postUser = async (req, res, next) => {
 
 const getUserProfile = async (req, res, next) => {
     try {
-        const result = await userService.getUserProfile(req.body);
+        const response = await userService.getUserProfile(req.body);
 
         res.status(200).json({
-            data: result,
+            data: response,
         });
     } catch (e) {
         next(e);
@@ -26,10 +26,10 @@ const getUserProfile = async (req, res, next) => {
 
 const patchUserProfile = async (req, res, next) => {
     try {
-        const result = await userService.patchUserProfile(req.body);
+        const response = await userService.patchUserProfile(req.body);
 
         res.status(200).json({
-            data: result,
+            data: response,
         });
     } catch (e) {
         next(e);
@@ -38,10 +38,10 @@ const patchUserProfile = async (req, res, next) => {
 
 const postUserAddress = async (req, res, next) => {
     try {
-        const result = await userService.postUserAddress(req.body);
+        const response = await userService.postUserAddress(req.body);
 
         res.status(200).json({
-            data: result,
+            data: response,
         });
     } catch (e) {
         next(e);
@@ -50,10 +50,10 @@ const postUserAddress = async (req, res, next) => {
 
 const getUserAddress = async (req, res, next) => {
     try {
-        const result = await userService.getUserAddress(req.body);
+        const response = await userService.getUserAddress(req.body);
 
         res.status(200).json({
-            data: result,
+            data: response,
         });
     } catch (e) {
         next(e);
@@ -62,10 +62,10 @@ const getUserAddress = async (req, res, next) => {
 
 const getUserAddressId = async (req, res, next) => {
     try {
-        const result = await userService.getUserAddressId(req.params, req.body);
+        const response = await userService.getUserAddressId(req.params, req.body);
 
         res.status(200).json({
-            data: result,
+            data: response,
         });
     } catch (e) {
         next(e);

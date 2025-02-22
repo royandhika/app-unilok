@@ -100,27 +100,27 @@ const postUserAddress = async (body) => {
 };
 
 const getUserAddress = async (body) => {
-    const result = await db
+    const response = await db
         .select
         // Tambahin kolom, jangan semua diambil
         ()
         .from(userAddresses)
         .where(eq(userAddresses.user_id, body.user_id));
 
-    return result;
+    return response;
 };
 
 const getUserAddressId = async (param, body) => {
-    const [result] = await db
+    const [response] = await db
         .select
         // Tambahin kolom, jangan semua diambil
         ()
         .from(userAddresses)
         .where(and(eq(userAddresses.user_id, body.user_id), eq(userAddresses.id, param.id)));
 
-    if (!result) throw new ResponseError(404, "Address not found");
+    if (!response) throw new ResponseError(404, "Address not found");
 
-    return result;
+    return response;
 };
 
 export default {

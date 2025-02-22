@@ -1,9 +1,64 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "55f17c8c-5ce9-4e72-b776-0305c1c2c903",
-  "prevId": "00000000-0000-0000-0000-000000000000",
+  "id": "d4aa8578-0f1d-401e-acbc-403bb32d0e99",
+  "prevId": "55f17c8c-5ce9-4e72-b776-0305c1c2c903",
   "tables": {
+    "colours": {
+      "name": "colours",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "hex": {
+          "name": "hex",
+          "type": "varchar(12)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "onUpdate": true,
+          "default": "(now())"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "colours_id": {
+          "name": "colours_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
     "order_items": {
       "name": "order_items",
       "columns": {
@@ -197,8 +252,8 @@
       "uniqueConstraints": {},
       "checkConstraint": {}
     },
-    "product_colour": {
-      "name": "product_colour",
+    "product_images": {
+      "name": "product_images",
       "columns": {
         "id": {
           "name": "id",
@@ -207,16 +262,23 @@
           "notNull": true,
           "autoincrement": true
         },
-        "name": {
-          "name": "name",
-          "type": "varchar(50)",
+        "product_id": {
+          "name": "product_id",
+          "type": "bigint unsigned",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "hex": {
-          "name": "hex",
-          "type": "varchar(12)",
+        "url": {
+          "name": "url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "is_thumbnail": {
+          "name": "is_thumbnail",
+          "type": "tinyint",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
@@ -240,10 +302,24 @@
         }
       },
       "indexes": {},
-      "foreignKeys": {},
+      "foreignKeys": {
+        "product_images_product_id_products_id_fk": {
+          "name": "product_images_product_id_products_id_fk",
+          "tableFrom": "product_images",
+          "tableTo": "products",
+          "columnsFrom": [
+            "product_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {
-        "product_colour_id": {
-          "name": "product_colour_id",
+        "product_images_id": {
+          "name": "product_images_id",
           "columns": [
             "id"
           ]
@@ -440,10 +516,10 @@
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
-        "product_variants_colour_id_product_colour_id_fk": {
-          "name": "product_variants_colour_id_product_colour_id_fk",
+        "product_variants_colour_id_colours_id_fk": {
+          "name": "product_variants_colour_id_colours_id_fk",
           "tableFrom": "product_variants",
-          "tableTo": "product_colour",
+          "tableTo": "colours",
           "columnsFrom": [
             "colour_id"
           ],
@@ -984,7 +1060,9 @@
   "views": {},
   "_meta": {
     "schemas": {},
-    "tables": {},
+    "tables": {
+      "\"product_colour\"": "\"colours\""
+    },
     "columns": {}
   },
   "internal": {

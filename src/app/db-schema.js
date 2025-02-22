@@ -13,6 +13,8 @@ import {
     date,
 } from "drizzle-orm/mysql-core";
 
+import { relations, sql } from "drizzle-orm";
+
 // ENUMS
 // const orderStatusEnum = mysqlEnum("order_status", ["Pending", "Paid", "Cancelled", "Shipped"]);
 // const flagAddressEnum = mysqlEnum("flag_address", ["Home", "Office"]);
@@ -75,12 +77,15 @@ export const userSessions = mysqlTable("user_sessions", {
     user_agent: varchar("user_agent", { length: 50 }).notNull(),
     ip_address: varchar("ip_address", { length: 20 }).notNull(),
     is_active: tinyint("is_active").notNull(),
+    expires_at: timestamp("expires_at")
+        .default(sql`(CURRENT_TIMESTAMP + INTERVAL 30 DAY)`)
+        .notNull(),
     created_at: timestamp("created_at").defaultNow().notNull(),
     updated_at: timestamp("updated_at").defaultNow().notNull().onUpdateNow(),
 });
 
 // MASTER COLOUR
-export const productColours = mysqlTable("product_colour", {
+export const colours = mysqlTable("colours", {
     id: serial("id").primaryKey(),
     name: varchar("name", { length: 50 }).notNull(),
     hex: varchar("hex", { length: 12 }).notNull(),
@@ -101,6 +106,18 @@ export const products = mysqlTable("products", {
     updated_at: timestamp("updated_at").defaultNow().notNull().onUpdateNow(),
 });
 
+// PRODUCT IMAGES
+export const productImages = mysqlTable("product_images", {
+    id: serial("id").primaryKey(),
+    product_id: bigint("product_id", { mode: "number", unsigned: true })
+        .notNull()
+        .references(() => products.id, { onDelete: "cascade" }),
+    url: text("url").notNull(),
+    is_thumbnail: tinyint("is_thumbnail").notNull(),
+    created_at: timestamp("created_at").defaultNow().notNull(),
+    updated_at: timestamp("updated_at").defaultNow().notNull().onUpdateNow(),
+});
+
 // PRODUCT VARIANTS
 export const productVariants = mysqlTable("product_variants", {
     id: serial("id").primaryKey(),
@@ -109,7 +126,7 @@ export const productVariants = mysqlTable("product_variants", {
         .references(() => products.id, { onDelete: "cascade" }),
     colour_id: bigint("colour_id", { mode: "number", unsigned: true })
         .notNull()
-        .references(() => productColours.id, { onDelete: "cascade" }),
+        .references(() => colours.id, { onDelete: "cascade" }),
     size: varchar("size", { length: 10 }).notNull(),
     stock: int("stock").notNull(),
     reserved_stock: int("reserved_stock").notNull(),
@@ -163,3 +180,31 @@ export const productReviews = mysqlTable("product_reviews", {
     created_at: timestamp("created_at").defaultNow().notNull(),
     updated_at: timestamp("updated_at").defaultNow().notNull().onUpdateNow(),
 });
+
+// RELATIONS
+export const productRelations = relations(products, ({ many }) => ({
+    productImages: many(productImages),
+    productVariants: many(productVariants),
+}));
+
+export const productImagesRelations = relations(productImages, ({ one }) => ({
+    product: one(products, {
+        fields: [productImages.product_id],
+        references: [products.id],
+    }),
+}));
+
+export const productVariantsRelations = relations(productVariants, ({ one }) => ({
+    product: one(products, {
+        fields: [productVariants.product_id],
+        references: [products.id],
+    }),
+    colours: one(colours, {
+        fields: [productVariants.colour_id],
+        references: [colours.id],
+    }),
+}));
+
+export const coloursRelations = relations(colours, ({ many }) => ({
+    productVariants: many(productVariants),
+}));

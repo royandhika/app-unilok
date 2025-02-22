@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, gt } from "drizzle-orm";
 import { userSessions, users } from "../app/db-schema.js";
 import { db } from "../app/db.js";
 import bcrypt from "bcrypt";
@@ -56,7 +56,13 @@ const getSession = async (body) => {
         // Tambahin kolom, jangan semua diambil
         ()
         .from(userSessions)
-        .where(and(eq(userSessions.user_id, body.user_id), eq(userSessions.is_active, 1)));
+        .where(
+            and(
+                eq(userSessions.user_id, body.user_id),
+                eq(userSessions.is_active, 1),
+                gt(userSessions.expires_at, new Date(Date.now() + 7 * 60 * 60 * 1000))
+            )
+        );
 
     return result;
 };
@@ -128,23 +134,23 @@ const deleteSession = async (header, body) => {
 
     await db.update(userSessions).set({ is_active: 0 }).where(eq(userSessions.refresh_token, requestRefreshToken));
 
-    const [result] = await db
+    const [response] = await db
         .select({ user_id: userSessions.user_id })
         .from(userSessions)
         .where(eq(userSessions.refresh_token, requestRefreshToken));
 
-    return result;
+    return response;
 };
 
 const deleteSessionAll = async (body) => {
     await db.update(userSessions).set({ is_active: 0 }).where(eq(userSessions.user_id, body.user_id));
 
-    const [result] = await db
+    const [response] = await db
         .select({ user_id: userSessions.user_id })
         .from(userSessions)
         .where(eq(userSessions.user_id, body.user_id));
 
-    return result;
+    return response;
 };
 
 export default {
