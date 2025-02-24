@@ -7,15 +7,19 @@ import { ResponseError } from "../error/response-error.js";
 const postOrder = async (body) => {
     // Buat transaction untuk antisipasi gagal
     await db.transaction(async (tx) => {
-        // Cek sisa stock cukup apa ga
         for (const item of body.items) {
+            // Cek sisa stock cukup apa ga
             const [variant] = await db
                 .select()
                 .from(productVariants)
                 .where(eq(productVariants.id, item.product_variant_id));
-
+            // Kalau ga cukup throw error
             if (!variant || variant.stock < item.quantity) throw new ResponseError(409, "Insufficient stock");
 
+            // Isi harga dari product_variants
+            item.price = variant.price;
+            
+            // Kurangi stock di product_variants
             await tx
                 .update(productVariants)
                 .set({
