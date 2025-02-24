@@ -15,10 +15,6 @@ import {
 
 import { relations, sql } from "drizzle-orm";
 
-// ENUMS
-// const orderStatusEnum = mysqlEnum("order_status", ["Pending", "Paid", "Cancelled", "Shipped"]);
-// const flagAddressEnum = mysqlEnum("flag_address", ["Home", "Office"]);
-
 // USERS
 export const users = mysqlTable("users", {
     id: serial("id").primaryKey(),
@@ -145,7 +141,6 @@ export const orders = mysqlTable("orders", {
         .notNull()
         .references(() => users.id, { onDelete: "cascade" }),
     status: mysqlEnum("status", ["Pending", "Paid", "Cancelled", "Shipped"]).default("Pending"),
-    total: decimal("total", { precision: 12, scale: 2 }).notNull(),
     created_at: timestamp("created_at").defaultNow().notNull(),
     updated_at: timestamp("updated_at").defaultNow().notNull().onUpdateNow(),
 });
@@ -184,7 +179,7 @@ export const productReviews = mysqlTable("product_reviews", {
 // RELATIONS
 export const usersRelations = relations(users, ({ one, many }) => ({
     userProfiles: one(userProfiles),
-    userProfiles: many(userProfiles),
+    userAddresses: many(userAddresses),
     userSessions: many(userSessions),
     productReviews: many(productReviews),
     orders: many(orders),

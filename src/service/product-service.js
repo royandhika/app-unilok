@@ -23,7 +23,7 @@ const postProduct = async (body) => {
 
 const postProductImage = async (param, body) => {
     const requestImage = body.images.map((img) => ({
-        product_id: param.id,
+        product_id: param.productId,
         url: img.url,
         is_thumbnail: img.is_thumbnail,
     }));
@@ -36,13 +36,14 @@ const postProductImage = async (param, body) => {
 
 const postProductVariant = async (param, body) => {
     const requestVariant = body.variants.map((variant) => ({
-        product_id: param.id,
+        product_id: param.productId,
         colour_id: variant.colour_id,
         size: variant.size,
         stock: variant.stock,
         reserved_stock: variant.reserved_stock,
         price: variant.price,
     }));
+    console.log(requestVariant);
 
     const [insertMany] = await db.insert(productVariants).values(requestVariant);
     const response = { count: insertMany.affectedRows };
@@ -111,7 +112,7 @@ const getProduct = async (query) => {
 
 const getProductId = async (param) => {
     const response = await db.query.products.findFirst({
-        where: eq(products.id, param.id),
+        where: eq(products.id, param.productId),
         columns: {
             id: true,
             title: true,
@@ -151,6 +152,31 @@ const getProductId = async (param) => {
     return response;
 };
 
+const getProductVariantId = async (param) => {
+    const response = await db.query.productVariants.findFirst({
+        where: and(eq(productVariants.id, param.variantId), eq(productVariants.product_id, param.productId)),
+        columns: {
+            id: true,
+            product_id: true,
+            size: true,
+            stock: true,
+            price: true,
+        },
+        with: {
+            colours: {
+                columns: {
+                    name: true,
+                    hex: true,
+                },
+            },
+        },
+    });
+
+    if (!response) throw new ResponseError(404, "Product not found");
+
+    return response;
+};
+
 export default {
     postColour,
     postProduct,
@@ -158,4 +184,5 @@ export default {
     postProductVariant,
     getProduct,
     getProductId,
+    getProductVariantId,
 };

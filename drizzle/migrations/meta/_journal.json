@@ -15,6 +15,13 @@
       "when": 1740061899967,
       "tag": "0001_mature_retro_girl",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1740305628049,
+      "tag": "0002_breezy_scalphunter",
+      "breakpoints": true
     }
   ]
 }

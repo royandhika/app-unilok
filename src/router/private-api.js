@@ -3,6 +3,7 @@ import { authMiddleware } from "../middleware/auth-middleware.js";
 import userController from "../controller/user-controller.js";
 import sessionController from "../controller/session-controller.js";
 import productController from "../controller/product-controller.js";
+import orderController from "../controller/order-controller.js";
 
 const privateRouter = new express.Router();
 privateRouter.use(authMiddleware);
@@ -12,7 +13,7 @@ privateRouter.get("/v1/users/me/profiles", userController.getUserProfile);
 privateRouter.patch("/v1/users/me/profiles", userController.patchUserProfile);
 privateRouter.post("/v1/users/me/addresses", userController.postUserAddress);
 privateRouter.get("/v1/users/me/addresses", userController.getUserAddress);
-privateRouter.get("/v1/users/me/addresses/:id", userController.getUserAddressId);
+privateRouter.get("/v1/users/me/addresses/:addressId", userController.getUserAddressId);
 // sessions
 privateRouter.post("/v1/users/me/sessions/refresh", sessionController.postSessionRefresh);
 privateRouter.get("/v1/users/me/sessions", sessionController.getSession);
@@ -21,15 +22,16 @@ privateRouter.delete("/v1/users/me/sessions/all", sessionController.deleteSessio
 // products
 privateRouter.post("/v1/products", productController.postProduct);
 privateRouter.post("/v1/colours", productController.postColour);
-privateRouter.post("/v1/products/:id/images", productController.postProductImage);
-privateRouter.post("/v1/products/:id/variants", productController.postProductVariant);
+privateRouter.post("/v1/products/:productId/images", productController.postProductImage);
+privateRouter.post("/v1/products/:productId/variants", productController.postProductVariant);
 privateRouter.get("/v1/products", productController.getProduct);
-privateRouter.get("/v1/products/:id", productController.getProductId);
-// post product
-// patch product
-// get product
-// get product id
+privateRouter.get("/v1/products/:productId", productController.getProductId);
+privateRouter.get("/v1/products/:productId/variants/:variantId", productController.getProductVariantId);
 // orders
+privateRouter.post("/v1/orders", orderController.postOrder);
+privateRouter.get("/v1/orders", orderController.getOrder);
+privateRouter.get("/v1/orders/:orderId", orderController.getOrderId);
+privateRouter.patch("/v1/orders/:orderId", orderController.patchOrder);
 // post order
 // get order
 // get order id

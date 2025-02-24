@@ -75,7 +75,19 @@ const getProductId = async (req, res, next) => {
     } catch (e) {
         next(e);
     }
-}
+};
+
+const getProductVariantId = async (req, res, next) => {
+    try {
+        const response = await productService.getProductVariantId(req.params);
+
+        res.status(200).json({
+            data: response,
+        });
+    } catch (e) {
+        next(e);
+    }
+};
 
 export default {
     postColour,
@@ -84,4 +96,5 @@ export default {
     postProductVariant,
     getProduct,
     getProductId,
+    getProductVariantId,
 };

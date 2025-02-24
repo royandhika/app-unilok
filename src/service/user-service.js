@@ -198,7 +198,7 @@ const getUserAddressId = async (param, body) => {
             flag: userAddresses.flag,
         })
         .from(userAddresses)
-        .where(and(eq(userAddresses.user_id, body.user_id), eq(userAddresses.id, param.id)));
+        .where(and(eq(userAddresses.user_id, body.user_id), eq(userAddresses.id, param.addressId)));
 
     if (!response) throw new ResponseError(404, "Address not found");
 
