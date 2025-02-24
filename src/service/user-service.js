@@ -6,9 +6,12 @@ import { patchUserValidation, postUserValidation } from "../validation/user-vali
 import { ResponseError } from "../error/response-error.js";
 import { eq, and } from "drizzle-orm";
 
+// Buat user baru
 const postUser = async (body) => {
+    // Validasi input data dari request
     const request = validate(postUserValidation, body);
 
+    // Cek existing data, jangan sampe sama
     const [usernameExist] = await db
         .select({
             id: users.id,
@@ -27,16 +30,22 @@ const postUser = async (body) => {
     if (usernameExist) throw new ResponseError(400, `${request.username} already exist`);
     if (emailExists) throw new ResponseError(400, `${request.email} already exist`);
 
+    // Hash password
     request.password = await bcrypt.hash(request.password, 10);
+    // Insert ke users
     const [response] = await db.insert(users).values(request).$returningId();
+    // Otomatis buat di user_profiles juga
     await db.insert(userProfiles).values({ user_id: response.id });
 
     return response;
 };
 
+// Update email atau no hp di users
 const patchUser = async (body) => {
+    // Validasi input data dari request
     const request = validate(patchUserValidation, body);
 
+    // Kalau isinya email, update emailnya
     if (request.email) {
         await db
             .update(users)
@@ -47,6 +56,7 @@ const patchUser = async (body) => {
             .where(eq(users.id, request.user_id));
     }
 
+    // Kalau ada no hp juga diupdate
     if (request.phone) {
         await db
             .update(users)
@@ -57,6 +67,7 @@ const patchUser = async (body) => {
             .where(eq(users.id, request.user_id));
     }
 
+    // Response balik data users
     const [response] = await db
         .select({
             id: users.id,
@@ -72,7 +83,9 @@ const patchUser = async (body) => {
     return response;
 };
 
+// Lihat isi user_profiles
 const getUserProfile = async (body) => {
+    // Kelengkapan users dan user_profiles untuk keperluan frontend
     const [response] = await db
         .select({
             id: userProfiles.id,
@@ -96,7 +109,9 @@ const getUserProfile = async (body) => {
     return response;
 };
 
+// Update kelengkapan user_profiles
 const patchUserProfile = async (body) => {
+    // Update table user_profiles
     await db
         .update(userProfiles)
         .set({
@@ -107,6 +122,7 @@ const patchUserProfile = async (body) => {
         })
         .where(eq(userProfiles.user_id, body.user_id));
 
+    // Response data user_profiles dengan kelengkapan dari users juga
     const [response] = await db
         .select({
             id: userProfiles.id,
@@ -128,17 +144,22 @@ const patchUserProfile = async (body) => {
     return response;
 };
 
+// Buat address baru
 const postUserAddress = async (body) => {
+    // Cek apakah sudah punya default address sebelumnya
     const [defaultExisting] = await db
         .select()
         .from(userAddresses)
         .where(and(eq(userAddresses.user_id, body.user_id), eq(userAddresses.is_default, 1)));
 
+    // Kalau belum, otomatis yang baru akan jadi default
     if (!defaultExisting) body.is_default = 1;
 
+    // Kalau sudah ada default dan yang baru juga default, ubah yang lama jadi 0
     if (body.is_default === 1)
         await db.update(userAddresses).set({ is_default: 0 }).where(eq(userAddresses.user_id, body.user_id));
 
+    // Insert ke table
     const [response] = await db
         .insert(userAddresses)
         .values({
@@ -159,6 +180,7 @@ const postUserAddress = async (body) => {
     return response;
 };
 
+// Lihat semua user_addresses
 const getUserAddress = async (body) => {
     const response = await db
         .select({
@@ -181,6 +203,7 @@ const getUserAddress = async (body) => {
     return response;
 };
 
+// Lihat detail address ketika dipilih salah satu
 const getUserAddressId = async (param, body) => {
     const [response] = await db
         .select({

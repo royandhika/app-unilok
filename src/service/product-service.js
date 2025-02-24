@@ -3,38 +3,48 @@ import { colours, productImages, productVariants, products } from "../app/db-sch
 import { db } from "../app/db.js";
 import { ResponseError } from "../error/response-error.js";
 
+// Insert colour baru ke master
 const postColour = async (body) => {
+    // Ubah list jadi object
     const requestColour = body.colours.map((colour) => ({
         name: colour.name,
         hex: colour.hex,
     }));
 
+    // Response dengan jumlah rownya
     const [insertMany] = await db.insert(colours).values(requestColour);
     const response = { count: insertMany.affectedRows };
 
     return response;
 };
 
+// Buat product baru (harus satu per satu)
 const postProduct = async (body) => {
     const [response] = await db.insert(products).values(body).$returningId();
-
+    
+    // Response dengan product_id
     return response;
 };
 
+// Masukkan gambar dari product
 const postProductImage = async (param, body) => {
+    // Ubah list jadi object
     const requestImage = body.images.map((img) => ({
         product_id: param.productId,
         url: img.url,
         is_thumbnail: img.is_thumbnail,
     }));
 
+    // Response dengan jumlah rownya
     const [insertMany] = await db.insert(productImages).values(requestImage);
     const response = { count: insertMany.affectedRows };
 
     return response;
 };
 
+// Masukkan variant dari product (informasi stock, warna, harga, dll)
 const postProductVariant = async (param, body) => {
+    // Ubah list jadi object
     const requestVariant = body.variants.map((variant) => ({
         product_id: param.productId,
         colour_id: variant.colour_id,
@@ -43,17 +53,20 @@ const postProductVariant = async (param, body) => {
         reserved_stock: variant.reserved_stock,
         price: variant.price,
     }));
-    console.log(requestVariant);
 
+    // Response dengan jumlah rownya
     const [insertMany] = await db.insert(productVariants).values(requestVariant);
     const response = { count: insertMany.affectedRows };
 
     return response;
 };
 
+// Lihat all products dengan filter search
 const getProduct = async (query) => {
+    // Deconstruct object dan isi default value
     const { search, gender, category, sortBy = "created_at", order = "desc", limit = "10", page = "1" } = query;
 
+    // Isi kriteria query secara dinamis
     const orderDirection = order === "desc" ? desc : asc;
     const offset = (parseInt(page) - 1) * parseInt(limit);
 
@@ -68,6 +81,7 @@ const getProduct = async (query) => {
         conditions.push(like(products.title, `%${search}%`));
     }
 
+    // Query tanpa where
     let queries = db
         .select({
             id: products.id,
@@ -92,25 +106,27 @@ const getProduct = async (query) => {
     const totalItems = `${count.length}`;
     const totalPages = `${Math.ceil(count.length / limit)}`;
 
-    if (limit && offset) {
-        queries = queries.limit(parseInt(limit));
-        queries = queries.offset(parseInt(offset));
-    }
-
-    // Response data
-    const response = await queries;
-
     const meta = {
         page: page,
         page_size: limit,
         total_items: totalItems,
         total_pages: totalPages,
     };
+    
+    // Response data
+    if (limit && offset) {
+        queries = queries.limit(parseInt(limit));
+        queries = queries.offset(parseInt(offset));
+    }
+
+    const response = await queries;
 
     return [response, meta];
 };
 
+// Lihat detail dari satu product
 const getProductId = async (param) => {
+    // Lihat products lengkap dengan relasinya untuk lihat detail foto dan stock
     const response = await db.query.products.findFirst({
         where: eq(products.id, param.productId),
         columns: {
@@ -152,7 +168,9 @@ const getProductId = async (param) => {
     return response;
 };
 
+// Cek detail harga, stock, dan warna dari tiap product_variants
 const getProductVariantId = async (param) => {
+    // Untuk kebutuhan cart & submit order
     const response = await db.query.productVariants.findFirst({
         where: and(eq(productVariants.id, param.variantId), eq(productVariants.product_id, param.productId)),
         columns: {

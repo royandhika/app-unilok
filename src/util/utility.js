@@ -23,9 +23,11 @@ const signToken = async (payload, type) => {
         : type === "access" ? "1d" : undefined;
 
     // Payloadnya butuh id & username
+    const payloadId = payload.id ? payload.id : payload.user_id;
+    
     const token = jwt.sign(
         {
-            id: payload.id,
+            id: payloadId,
             username: payload.username,
         },
         jwtKey,

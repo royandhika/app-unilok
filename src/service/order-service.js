@@ -3,8 +3,11 @@ import { orderItems, orders, productVariants } from "../app/db-schema.js";
 import { db } from "../app/db.js";
 import { ResponseError } from "../error/response-error.js";
 
+// Buat order baru
 const postOrder = async (body) => {
+    // Buat transaction untuk antisipasi gagal
     await db.transaction(async (tx) => {
+        // Cek sisa stock cukup apa ga
         for (const item of body.items) {
             const [variant] = await db
                 .select()
@@ -21,6 +24,7 @@ const postOrder = async (body) => {
                 .where(eq(productVariants.id, item.product_variant_id));
         }
 
+        // Insert ke orders
         const [insertOrder] = await tx
             .insert(orders)
             .values({
@@ -29,6 +33,7 @@ const postOrder = async (body) => {
             })
             .$returningId();
 
+        // Kemudian baru insert ke order_items dari id order
         const requestOrderItem = body.items.map((item) => ({
             order_id: insertOrder.id,
             product_variant_id: item.product_variant_id,
@@ -40,6 +45,7 @@ const postOrder = async (body) => {
     });
 };
 
+// Lihat semua order dari user
 const getOrder = async (body) => {
     const response = await db.query.orders.findMany({
         where: eq(orders.user_id, body.user_id),
@@ -64,7 +70,9 @@ const getOrder = async (body) => {
     return response;
 };
 
+// Lihat detail salah satu order
 const getOrderId = async (param, body) => {
+    // Lengkap dengan relasi ke quantity dan harga
     const response = await db.query.orders.findFirst({
         where: and(eq(orders.id, param.orderId, eq(orders.user_id, body.user_id))),
         columns: {
