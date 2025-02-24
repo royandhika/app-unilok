@@ -14,6 +14,8 @@ privateRouter.patch("/v1/users/me/profiles", userController.patchUserProfile);
 privateRouter.post("/v1/users/me/addresses", userController.postUserAddress);
 privateRouter.get("/v1/users/me/addresses", userController.getUserAddress);
 privateRouter.get("/v1/users/me/addresses/:addressId", userController.getUserAddressId);
+privateRouter.patch("/v1/users/me/addresses/:addressId", userController.patchUserAddressId);
+privateRouter.delete("/v1/users/me/addresses/:addressId", userController.deleteUserAddressId);
 // sessions
 privateRouter.post("/v1/users/me/sessions/refresh", sessionController.postSessionRefresh);
 privateRouter.get("/v1/users/me/sessions", sessionController.getSession);

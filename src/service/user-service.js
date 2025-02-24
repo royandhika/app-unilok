@@ -4,7 +4,7 @@ import { users, userProfiles, userAddresses } from "../app/db-schema.js";
 import { validate } from "../util/utility.js";
 import { patchUserValidation, postUserValidation } from "../validation/user-validation.js";
 import { ResponseError } from "../error/response-error.js";
-import { eq, and } from "drizzle-orm";
+import { eq, and, ne } from "drizzle-orm";
 
 // Buat user baru
 const postUser = async (body) => {
@@ -228,6 +228,90 @@ const getUserAddressId = async (param, body) => {
     return response;
 };
 
+// Update info address
+const patchUserAddressId = async (param, body) => {
+    // Cek ada di table ga
+    const [addressExist] = await db
+        .select()
+        .from(userAddresses)
+        .where(and(eq(userAddresses.id, param.addressId), eq(userAddresses.user_id, body.user_id)));
+
+    if (!addressExist) throw new ResponseError(404, "Address not found");
+
+    // Cek apakah sudah punya default address selain yang diedit
+    const [defaultExisting] = await db
+        .select()
+        .from(userAddresses)
+        .where(
+            and(
+                eq(userAddresses.user_id, body.user_id),
+                eq(userAddresses.is_default, 1),
+                ne(userAddresses.id, param.addressId)
+            )
+        );
+
+    // Kalau belum, otomatis yang baru akan jadi default
+    if (!defaultExisting) body.is_default = 1;
+
+    // Kalau sudah ada default dan yang baru juga default, ubah yang lama jadi 0
+    if (body.is_default === 1)
+        await db.update(userAddresses).set({ is_default: 0 }).where(eq(userAddresses.user_id, body.user_id));
+
+    // Update value dan return
+    await db
+        .update(userAddresses)
+        .set({
+            name: body.name,
+            phone: body.phone,
+            address: body.address,
+            postal_code: body.postal_code,
+            district: body.district,
+            city: body.city,
+            province: body.province,
+            notes: body.notes,
+            is_default: body.is_default,
+            flag: body.flag,
+        })
+        .where(and(eq(userAddresses.user_id, body.user_id), eq(userAddresses.id, param.addressId)));
+
+    const [response] = await db
+        .select({
+            id: userAddresses.id,
+            user_id: userAddresses.user_id,
+            name: userAddresses.name,
+            phone: userAddresses.phone,
+            address: userAddresses.address,
+            postal_code: userAddresses.postal_code,
+            district: userAddresses.district,
+            city: userAddresses.city,
+            province: userAddresses.province,
+            notes: userAddresses.notes,
+            is_default: userAddresses.is_default,
+            flag: userAddresses.flag,
+        })
+        .from(userAddresses)
+        .where(and(eq(userAddresses.user_id, body.user_id), eq(userAddresses.id, param.addressId)));
+
+    return response;
+};
+
+// Hapus address
+const deleteUserAddressId = async (param, body) => {
+    // Cek ada di table ga
+    const [addressExist] = await db
+        .select()
+        .from(userAddresses)
+        .where(and(eq(userAddresses.id, param.addressId), eq(userAddresses.user_id, body.user_id)));
+
+    if (!addressExist) throw new ResponseError(404, "Address not found");
+
+    // Hapus
+    const [deletedAddress] = await db.delete(userAddresses).where(eq(userAddresses.id, param.addressId));
+    const response = { count: deletedAddress.affectedRows };
+
+    return response;
+};
+
 export default {
     postUser,
     patchUser,
@@ -236,4 +320,6 @@ export default {
     postUserAddress,
     getUserAddress,
     getUserAddressId,
+    patchUserAddressId,
+    deleteUserAddressId,
 };

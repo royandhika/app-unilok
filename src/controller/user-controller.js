@@ -85,6 +85,31 @@ const getUserAddressId = async (req, res, next) => {
     }
 };
 
+const patchUserAddressId = async (req, res, next) => {
+    try {
+        const response = await userService.patchUserAddressId(req.params, req.body);
+
+        res.status(200).json({
+            data: response,
+        });
+    } catch (e) {
+        next(e);
+    }
+};
+
+const deleteUserAddressId = async (req, res, next) => {
+    try {
+        const response = await userService.deleteUserAddressId(req.params, req.body);
+
+        res.status(200).json({
+            data: response,
+            message: "Delete success"
+        });
+    } catch (e) {
+        next(e);
+    }
+};
+
 export default {
     postUser,
     patchUser,
@@ -93,4 +118,6 @@ export default {
     postUserAddress,
     getUserAddress,
     getUserAddressId,
+    patchUserAddressId,
+    deleteUserAddressId,
 };
