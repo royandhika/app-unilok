@@ -55,6 +55,7 @@ const postUserAddress = async (req, res, next) => {
 
         res.status(200).json({
             data: response,
+            message: "Create address success",
         });
     } catch (e) {
         next(e);
@@ -103,7 +104,7 @@ const deleteUserAddressId = async (req, res, next) => {
 
         res.status(200).json({
             data: response,
-            message: "Delete success"
+            message: "Delete success",
         });
     } catch (e) {
         next(e);

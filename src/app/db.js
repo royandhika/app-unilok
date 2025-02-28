@@ -18,3 +18,5 @@ export const db = drizzle(pool, {
     mode: "default",
     logger: new DefaultLogger({ writer: loggerWinston }),
 });
+
+export { pool };

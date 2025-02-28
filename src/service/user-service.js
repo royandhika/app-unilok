@@ -33,9 +33,19 @@ const postUser = async (body) => {
     // Hash password
     request.password = await bcrypt.hash(request.password, 10);
     // Insert ke users
-    const [response] = await db.insert(users).values(request).$returningId();
+    const [insertUser] = await db.insert(users).values(request).$returningId();
     // Otomatis buat di user_profiles juga
-    await db.insert(userProfiles).values({ user_id: response.id });
+    await db.insert(userProfiles).values({ user_id: insertUser.id });
+
+    // Buat response
+    const [response] = await db
+        .select({
+            id: users.id,
+            username: users.username,
+            email: users.email,
+        })
+        .from(users)
+        .where(eq(users.id, insertUser.id));
 
     return response;
 };
@@ -160,7 +170,7 @@ const postUserAddress = async (body) => {
         await db.update(userAddresses).set({ is_default: 0 }).where(eq(userAddresses.user_id, body.user_id));
 
     // Insert ke table
-    const [response] = await db
+    const [insertOne] = await db
         .insert(userAddresses)
         .values({
             user_id: body.user_id,
@@ -176,6 +186,18 @@ const postUserAddress = async (body) => {
             flag: body.flag,
         })
         .$returningId();
+
+    const [response] = await db
+        .select({
+            id: userAddresses.id,
+            name: userAddresses.name,
+            phone: userAddresses.phone,
+            address: userAddresses.address,
+            flag: userAddresses.flag,
+            is_default: userAddresses.is_default,
+        })
+        .from(userAddresses)
+        .where(eq(userAddresses.id, insertOne.id));
 
     return response;
 };
@@ -306,8 +328,10 @@ const deleteUserAddressId = async (param, body) => {
     if (!addressExist) throw new ResponseError(404, "Address not found");
 
     // Hapus
-    const [deletedAddress] = await db.delete(userAddresses).where(eq(userAddresses.id, param.addressId));
-    const response = { count: deletedAddress.affectedRows };
+    await db.delete(userAddresses).where(eq(userAddresses.id, param.addressId));
+    
+    // Buat response
+    const response = { id: parseInt(param.addressId), user_id: body.user_id };
 
     return response;
 };

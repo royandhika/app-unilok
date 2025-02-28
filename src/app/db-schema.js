@@ -98,6 +98,7 @@ export const products = mysqlTable("products", {
     category: varchar("category", { length: 20 }).notNull(),
     gender: varchar("gender", { length: 20 }).notNull(),
     tags: json("tags").notNull(),
+    is_hidden: tinyint("is_hidden").default(1),
     created_at: timestamp("created_at").defaultNow().notNull(),
     updated_at: timestamp("updated_at").defaultNow().notNull().onUpdateNow(),
 });
