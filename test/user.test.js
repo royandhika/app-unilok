@@ -236,4 +236,102 @@ describe("Private: User resources", function () {
         expect(response.status).toBe(200);
         expect(response.body.data[0]).toBeDefined();
     });
+
+    it("Should be able to get address by id", async () => {
+        const addressId = await supertest(web)
+            .post("/v1/users/me/addresses")
+            .set("authorization", `Bearer ${token}`)
+            .send({
+                name: "Roy Andhika",
+                phone: "085921756700",
+                address: "Rukita Dwiwarna Mangga Besar",
+                postal_code: "10740",
+                district: "Sawah Besar",
+                city: "Jakarta Utara",
+                province: "DKI Jakarta",
+                notes: "Kamar 512",
+                is_default: 1,
+                flag: "Home",
+            });
+
+        const response = await supertest(web)
+            .get(`/v1/users/me/addresses/${addressId.body.data.id}`)
+            .set("authorization", `Bearer ${token}`);
+
+        expect(response.status).toBe(200);
+        expect(response.body.data.id).toBe(addressId.body.data.id);
+        expect(response.body.data.name).toBe("Roy Andhika");
+        expect(response.body.data.phone).toBe("085921756700");
+        expect(response.body.data.address).toBe("Rukita Dwiwarna Mangga Besar");
+        expect(response.body.data.flag).toBe("Home");
+        expect(response.body.data.is_default).toBe(1);
+    });
+
+    it("Should be able to update address", async () => {
+        const addressId = await supertest(web)
+            .post("/v1/users/me/addresses")
+            .set("authorization", `Bearer ${token}`)
+            .send({
+                name: "Roy Andhika",
+                phone: "085921756700",
+                address: "Rukita Dwiwarna Mangga Besar",
+                postal_code: "10740",
+                district: "Sawah Besar",
+                city: "Jakarta Utara",
+                province: "DKI Jakarta",
+                notes: "Kamar 512",
+                is_default: 1,
+                flag: "Home",
+            });
+
+        const response = await supertest(web)
+            .patch(`/v1/users/me/addresses/${addressId.body.data.id}`)
+            .set("authorization", `Bearer ${token}`)
+            .send({
+                name: "Roy",
+                phone: "085921756700",
+                address: "Rukita Dwiwarna Mangga Besar",
+                postal_code: "10740",
+                district: "Sawah Besar",
+                city: "Jakarta Utara",
+                province: "DKI Jakarta",
+                notes: "Kamar 512",
+                is_default: 0,
+                flag: "Office",
+            });
+
+        expect(response.status).toBe(200);
+        expect(response.body.data.id).toBe(addressId.body.data.id);
+        expect(response.body.data.name).toBe("Roy");
+        expect(response.body.data.phone).toBe("085921756700");
+        expect(response.body.data.address).toBe("Rukita Dwiwarna Mangga Besar");
+        expect(response.body.data.flag).toBe("Office");
+        expect(response.body.data.is_default).toBe(1);
+    });
+
+    it("Should be able to delete address", async () => {
+        const addressId = await supertest(web)
+            .post("/v1/users/me/addresses")
+            .set("authorization", `Bearer ${token}`)
+            .send({
+                name: "Roy Andhika",
+                phone: "085921756700",
+                address: "Rukita Dwiwarna Mangga Besar",
+                postal_code: "10740",
+                district: "Sawah Besar",
+                city: "Jakarta Utara",
+                province: "DKI Jakarta",
+                notes: "Kamar 512",
+                is_default: 1,
+                flag: "Home",
+            });
+
+        const response = await supertest(web)
+            .delete(`/v1/users/me/addresses/${addressId.body.data.id}`)
+            .set("authorization", `Bearer ${token}`);
+
+        expect(response.status).toBe(200);
+        expect(response.body.data.id).toBe(addressId.body.data.id);
+        expect(response.body.message).toBeDefined();
+    });
 });

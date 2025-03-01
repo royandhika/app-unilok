@@ -57,17 +57,24 @@ const patchUser = async (body) => {
 
     // Kalau isinya email, update emailnya
     if (request.email) {
-        await db
-            .update(users)
-            .set({
-                email: request.email,
-                verified_email: 0,
-            })
-            .where(eq(users.id, request.user_id));
+        // Cek ada email yang sama ga
+        const [emailExist] = await db.select().from(users).where(eq(users.email, request.email));
+
+        if (emailExist) throw new ResponseError(400, `${request.email} already exist`);
+
+        await db.update(users).set({
+            email: request.email,
+            verified_email: 0,
+        });
     }
 
     // Kalau ada no hp juga diupdate
     if (request.phone) {
+        // Cek ada phone yang sama ga
+        const [phoneExist] = await db.select().from(users).where(eq(users.phone, request.phone));
+
+        if (phoneExist) throw new ResponseError(400, `${request.phone} already exist`);
+
         await db
             .update(users)
             .set({
@@ -160,7 +167,13 @@ const postUserAddress = async (body) => {
     const [defaultExisting] = await db
         .select()
         .from(userAddresses)
-        .where(and(eq(userAddresses.user_id, body.user_id), eq(userAddresses.is_default, 1)));
+        .where(
+            and(
+                eq(userAddresses.user_id, body.user_id),
+                eq(userAddresses.is_default, 1),
+                eq(userAddresses.is_hidden, 0)
+            )
+        );
 
     // Kalau belum, otomatis yang baru akan jadi default
     if (!defaultExisting) body.is_default = 1;
@@ -220,7 +233,7 @@ const getUserAddress = async (body) => {
             flag: userAddresses.flag,
         })
         .from(userAddresses)
-        .where(eq(userAddresses.user_id, body.user_id));
+        .where(and(eq(userAddresses.user_id, body.user_id), eq(userAddresses.is_hidden, 0)));
 
     return response;
 };
@@ -243,7 +256,13 @@ const getUserAddressId = async (param, body) => {
             flag: userAddresses.flag,
         })
         .from(userAddresses)
-        .where(and(eq(userAddresses.user_id, body.user_id), eq(userAddresses.id, param.addressId)));
+        .where(
+            and(
+                eq(userAddresses.user_id, body.user_id),
+                eq(userAddresses.id, param.addressId),
+                eq(userAddresses.is_hidden, 0)
+            )
+        );
 
     if (!response) throw new ResponseError(404, "Address not found");
 
@@ -256,7 +275,13 @@ const patchUserAddressId = async (param, body) => {
     const [addressExist] = await db
         .select()
         .from(userAddresses)
-        .where(and(eq(userAddresses.id, param.addressId), eq(userAddresses.user_id, body.user_id)));
+        .where(
+            and(
+                eq(userAddresses.id, param.addressId),
+                eq(userAddresses.user_id, body.user_id),
+                eq(userAddresses.is_hidden, 0)
+            )
+        );
 
     if (!addressExist) throw new ResponseError(404, "Address not found");
 
@@ -268,7 +293,8 @@ const patchUserAddressId = async (param, body) => {
             and(
                 eq(userAddresses.user_id, body.user_id),
                 eq(userAddresses.is_default, 1),
-                ne(userAddresses.id, param.addressId)
+                ne(userAddresses.id, param.addressId),
+                eq(userAddresses.is_hidden, 0)
             )
         );
 
@@ -323,13 +349,40 @@ const deleteUserAddressId = async (param, body) => {
     const [addressExist] = await db
         .select()
         .from(userAddresses)
-        .where(and(eq(userAddresses.id, param.addressId), eq(userAddresses.user_id, body.user_id)));
+        .where(
+            and(
+                eq(userAddresses.id, param.addressId),
+                eq(userAddresses.user_id, body.user_id),
+                eq(userAddresses.is_hidden, 0)
+            )
+        );
 
     if (!addressExist) throw new ResponseError(404, "Address not found");
 
-    // Hapus
-    await db.delete(userAddresses).where(eq(userAddresses.id, param.addressId));
-    
+    // Kalau yang dihapus ini default, lempar defaultnya ke next (random) address (kalau ada)
+    if (addressExist.is_default === 1) {
+        const [randomExisting] = await db
+            .select()
+            .from(userAddresses)
+            .where(
+                and(
+                    eq(userAddresses.user_id, body.user_id),
+                    eq(userAddresses.is_hidden, 0),
+                    ne(userAddresses.id, param.addressId)
+                )
+            )
+            .limit(1);
+
+        // Kalau ada, jadiin default, kalo gaada yasudah
+        if (randomExisting) {
+            await db.update(userAddresses).set({ is_default: 1 }).where(eq(userAddresses.id, randomExisting.id));
+        }
+        await db.update(userAddresses).set({ is_default: 0 }).where(eq(userAddresses.id, param.addressId));
+    }
+
+    // Soft delete
+    await db.update(userAddresses).set({ is_hidden: 1 }).where(eq(userAddresses.id, param.addressId));
+
     // Buat response
     const response = { id: parseInt(param.addressId), user_id: body.user_id };
 

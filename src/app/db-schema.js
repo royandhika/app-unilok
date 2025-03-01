@@ -59,6 +59,7 @@ export const userAddresses = mysqlTable("user_addresses", {
     notes: varchar("notes", { length: 80 }),
     is_default: tinyint("is_default").default(0),
     flag: mysqlEnum("flag", ["Home", "Office"]).notNull(),
+    is_hidden: tinyint("is_hidden").default(0),
     created_at: timestamp("created_at").defaultNow().notNull(),
     updated_at: timestamp("updated_at").defaultNow().notNull().onUpdateNow(),
 });
