@@ -157,8 +157,12 @@ const deleteSession = async (header) => {
     await db.update(userSessions).set({ is_active: 0 }).where(eq(userSessions.refresh_token, requestRefreshToken));
 
     const [response] = await db
-        .select({ user_id: userSessions.user_id })
+        .select({
+            user_id: userSessions.user_id,
+            username: users.username,
+        })
         .from(userSessions)
+        .leftJoin(users, eq(userSessions.user_id, users.id))
         .where(eq(userSessions.refresh_token, requestRefreshToken));
 
     return response;
@@ -170,8 +174,12 @@ const deleteSessionAll = async (body) => {
     await db.update(userSessions).set({ is_active: 0 }).where(eq(userSessions.user_id, body.user_id));
 
     const [response] = await db
-        .select({ user_id: userSessions.user_id })
+        .select({
+            user_id: userSessions.user_id,
+            username: users.username,
+        })
         .from(userSessions)
+        .leftJoin(users, eq(userSessions.user_id, users.id))
         .where(eq(userSessions.user_id, body.user_id));
 
     return response;

@@ -95,7 +95,7 @@ export const products = mysqlTable("products", {
     id: serial("id").primaryKey(),
     title: varchar("title", { length: 30 }).notNull(),
     description: text("description"),
-    base_price: decimal("base_price", { precision: 12, scale: 2 }).notNull(),
+    base_price: bigint("base_price", { mode: "number" }).notNull(),
     category: varchar("category", { length: 20 }).notNull(),
     gender: varchar("gender", { length: 20 }).notNull(),
     tags: json("tags").notNull(),
@@ -128,7 +128,7 @@ export const productVariants = mysqlTable("product_variants", {
     size: varchar("size", { length: 10 }).notNull(),
     stock: int("stock").notNull(),
     reserved_stock: int("reserved_stock").notNull(),
-    price: decimal("price", { precision: 12, scale: 2 }).notNull(),
+    price: bigint("price", { mode: "number" }).notNull(),
     created_at: timestamp("created_at").defaultNow().notNull(),
     updated_at: timestamp("updated_at").defaultNow().notNull().onUpdateNow(),
 });
@@ -157,7 +157,7 @@ export const orderItems = mysqlTable("order_items", {
         .notNull()
         .references(() => productVariants.id, { onDelete: "cascade" }),
     quantity: int("quantity").notNull(),
-    price: decimal("price", { precision: 10, scale: 2 }).notNull(),
+    price: bigint("price", { mode: "number" }).notNull(),
     created_at: timestamp("created_at").defaultNow().notNull(),
     updated_at: timestamp("updated_at").defaultNow().notNull().onUpdateNow(),
 });

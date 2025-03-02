@@ -18,10 +18,35 @@ const postColour = async (body) => {
     return response;
 };
 
+// Get all colour untuk keperluan admin bikin variant
+const getColour = async () => {
+    const response = await db
+        .select({
+            id: colours.id,
+            name: colours.name,
+            hex: colours.hex,
+        })
+        .from(colours);
+
+    return response;
+};
+
 // Buat product baru (harus satu per satu)
 const postProduct = async (body) => {
-    const [response] = await db.insert(products).values(body).$returningId();
-    
+    const [insertOne] = await db.insert(products).values(body).$returningId();
+
+    const [response] = await db
+        .select({
+            id: products.id,
+            title: products.title,
+            base_price: products.base_price,
+            category: products.category,
+            gender: products.gender,
+            tags: products.tags,
+        })
+        .from(products)
+        .where(eq(products.id, insertOne.id));
+
     // Response dengan product_id
     return response;
 };
@@ -112,7 +137,7 @@ const getProduct = async (query) => {
         total_items: totalItems,
         total_pages: totalPages,
     };
-    
+
     // Response data
     if (limit && offset) {
         queries = queries.limit(parseInt(limit));
@@ -197,6 +222,7 @@ const getProductVariantId = async (param) => {
 
 export default {
     postColour,
+    getColour,
     postProduct,
     postProductImage,
     postProductVariant,

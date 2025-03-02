@@ -13,6 +13,18 @@ const postColour = async (req, res, next) => {
     }
 };
 
+const getColour = async (req, res, next) => {
+    try {
+        const response = await productService.getColour();
+
+        res.status(200).json({
+            data: response,
+        });
+    } catch (e) {
+        next(e);
+    }
+};
+
 const postProduct = async (req, res, next) => {
     try {
         const response = await productService.postProduct(req.body);
@@ -91,6 +103,7 @@ const getProductVariantId = async (req, res, next) => {
 
 export default {
     postColour,
+    getColour,
     postProduct,
     postProductImage,
     postProductVariant,

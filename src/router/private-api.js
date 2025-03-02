@@ -24,6 +24,7 @@ privateRouter.delete("/v1/users/me/sessions/all", sessionController.deleteSessio
 // products
 privateRouter.post("/v1/products", productController.postProduct);
 privateRouter.post("/v1/colours", productController.postColour);
+privateRouter.get("/v1/colours", productController.getColour);
 privateRouter.post("/v1/products/:productId/images", productController.postProductImage);
 privateRouter.post("/v1/products/:productId/variants", productController.postProductVariant);
 privateRouter.get("/v1/products", productController.getProduct);
