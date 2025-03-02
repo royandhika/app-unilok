@@ -1,5 +1,5 @@
 import { and, eq, gt } from "drizzle-orm";
-import { userSessions, users } from "../app/db-schema.js";
+import { userProfiles, userSessions, users } from "../app/db-schema.js";
 import { db } from "../app/db.js";
 import bcrypt from "bcrypt";
 import { signToken, validate } from "../util/utility.js";
@@ -46,9 +46,13 @@ const postSession = async (body) => {
         .select({
             id: userSessions.id,
             user_id: userSessions.user_id,
+            username: users.username,
+            full_name: userProfiles.full_name,
             refresh_token: userSessions.refresh_token,
         })
         .from(userSessions)
+        .leftJoin(users, eq(userSessions.user_id, users.id))
+        .leftJoin(userProfiles, eq(userSessions.user_id, userProfiles.user_id))
         .where(eq(userSessions.id, insertId.id));
 
     response.access_token = accessToken;
@@ -62,11 +66,13 @@ const getSession = async (body) => {
         .select({
             id: userSessions.id,
             user_id: userSessions.user_id,
+            username: users.username,
             user_agent: userSessions.user_agent,
             ip_address: userSessions.ip_address,
             is_active: userSessions.is_active,
         })
         .from(userSessions)
+        .leftJoin(users, eq(userSessions.user_id, users.id))
         .where(
             and(
                 eq(userSessions.user_id, body.user_id),
@@ -122,9 +128,11 @@ const postSessionRefresh = async (header, body) => {
         .select({
             id: userSessions.id,
             user_id: userSessions.user_id,
+            username: users.username,
             refresh_token: userSessions.refresh_token,
         })
         .from(userSessions)
+        .leftJoin(users, eq(userSessions.user_id, users.id))
         .where(eq(userSessions.id, insertId.id));
 
     response.access_token = newAccessToken;
