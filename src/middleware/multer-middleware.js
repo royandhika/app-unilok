@@ -8,27 +8,32 @@ const multerBody = (req, res, next) => {
     next();
 };
 
-const pathAvatar = path.join(os.homedir(), "uploads/avatar");
-if (!fs.existsSync(pathAvatar)) {
-    fs.mkdirSync(pathAvatar, { recursive: true });
-}
+const multerUploader = (folder, limit, type, field = null) => {
+    const pathFolder = path.join(os.homedir(), "uploads", folder);
 
-const storageAvatar = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, pathAvatar);
-    },
-    filename: function (req, file, cb) {
-        const ext = path.extname(file.originalname);
-        const randomString = Date.now() + Math.round(Math.random() * 1e9);
-        const uniqueName = `${file.fieldname}${randomString}${ext}`;
-        cb(null, uniqueName);
-    },
-});
+    if (!fs.existsSync(pathFolder)) {
+        fs.mkdirSync(pathFolder, { recursive: true });
+    }
 
-const limitAvatar = {
-    fileSize: 2 * 1024 * 1024, // 2MB
+    const storage = multer.diskStorage({
+        destination: function (req, file, cb) {
+            cb(null, pathFolder);
+        },
+        filename: function (req, file, cb) {
+            const ext = path.extname(file.originalname);
+            const randomString = Date.now() + Math.round(Math.random() * 1e9);
+            const uniqueName = `${folder}${randomString}${ext}`;
+            cb(null, uniqueName);
+        },
+    });
+
+    const uploader = multer({ storage, limit });
+
+    if (type === "single") return uploader.single(folder);
+    if (type === "any") return uploader.any(folder); 
 };
 
-const uploadAvatar = multer({ storage: storageAvatar, limits: limitAvatar }).single("avatar");
+const avatarUploader = multerUploader("avatar", { fileSize: 2 * 1024 * 1024 }, "single");
+const productUploader = multerUploader("product", { fileSize: 10 * 1024 * 1024 }, "any");
 
-export { multerBody, uploadAvatar };
+export { multerBody, avatarUploader, productUploader };
