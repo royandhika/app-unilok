@@ -49,6 +49,19 @@ const patchUserProfile = async (req, res, next) => {
     }
 };
 
+const postUserAvatars = async (req, res, next) => {
+    try {
+        const response = await userService.postUserAvatars(req.file, req.authBody);
+        
+        res.status(200).json({
+            data: response,
+            message: "Upload avatar success",
+        });
+    } catch (e) {
+        next(e);
+    }
+};
+
 const postUserAddress = async (req, res, next) => {
     try {
         const response = await userService.postUserAddress(req.body);
@@ -116,6 +129,7 @@ export default {
     patchUser,
     getUserProfile,
     patchUserProfile,
+    postUserAvatars,
     postUserAddress,
     getUserAddress,
     getUserAddressId,

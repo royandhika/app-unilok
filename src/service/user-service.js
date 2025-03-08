@@ -5,6 +5,7 @@ import { validate } from "../util/utility.js";
 import { patchUserValidation, postUserValidation } from "../validation/user-validation.js";
 import { ResponseError } from "../error/response-error.js";
 import { eq, and, ne } from "drizzle-orm";
+import { response } from "express";
 
 // Buat user baru
 const postUser = async (body) => {
@@ -157,6 +158,20 @@ const patchUserProfile = async (body) => {
         .from(userProfiles)
         .leftJoin(users, eq(userProfiles.user_id, users.id))
         .where(eq(userProfiles.user_id, body.user_id));
+
+    return response;
+};
+
+// Upload avatar
+const postUserAvatars = async (file, body) => {
+    // Simpan nama file ke db
+    await db
+        .update(userProfiles)
+        .set({ avatar: `avatar/${file.filename}` })
+        .where(eq(userProfiles.user_id, body.user_id));
+
+    // Buat response link avatar 
+    const response = { avatar: `avatar/${file.filename}` };
 
     return response;
 };
@@ -394,6 +409,7 @@ export default {
     patchUser,
     getUserProfile,
     patchUserProfile,
+    postUserAvatars,
     postUserAddress,
     getUserAddress,
     getUserAddressId,

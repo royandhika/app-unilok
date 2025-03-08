@@ -4,6 +4,7 @@ import userController from "../controller/user-controller.js";
 import sessionController from "../controller/session-controller.js";
 import productController from "../controller/product-controller.js";
 import orderController from "../controller/order-controller.js";
+import { multerBody, uploadAvatar } from "../middleware/multer-middleware.js";
 
 const privateRouter = new express.Router();
 privateRouter.use(authMiddleware);
@@ -11,6 +12,7 @@ privateRouter.use(authMiddleware);
 privateRouter.patch("/v1/users", userController.patchUser);
 privateRouter.get("/v1/users/me/profiles", userController.getUserProfile);
 privateRouter.patch("/v1/users/me/profiles", userController.patchUserProfile);
+privateRouter.post("/v1/users/me/avatars", multerBody, uploadAvatar, userController.postUserAvatars);
 privateRouter.post("/v1/users/me/addresses", userController.postUserAddress);
 privateRouter.get("/v1/users/me/addresses", userController.getUserAddress);
 privateRouter.get("/v1/users/me/addresses/:addressId", userController.getUserAddressId);
