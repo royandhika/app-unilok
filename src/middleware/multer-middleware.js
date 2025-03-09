@@ -8,7 +8,7 @@ const multerBody = (req, res, next) => {
     next();
 };
 
-const multerUploader = (folder, limit, type, field = null) => {
+const multerUploader = (folder, limit, type) => {
     const pathFolder = path.join(os.homedir(), "uploads", folder);
 
     if (!fs.existsSync(pathFolder)) {

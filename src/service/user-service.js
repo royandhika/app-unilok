@@ -5,7 +5,8 @@ import { validate } from "../util/utility.js";
 import { patchUserValidation, postUserValidation } from "../validation/user-validation.js";
 import { ResponseError } from "../error/response-error.js";
 import { eq, and, ne } from "drizzle-orm";
-import { response } from "express";
+import "dotenv/config";
+const imgDomain = process.env.IMG_DOM;
 
 // Buat user baru
 const postUser = async (body) => {
@@ -124,6 +125,8 @@ const getUserProfile = async (body) => {
 
     if (!response) throw new ResponseError(404, "User not found");
 
+    response.avatar = `${imgDomain}${response.avatar}`;
+
     return response;
 };
 
@@ -159,6 +162,8 @@ const patchUserProfile = async (body) => {
         .leftJoin(users, eq(userProfiles.user_id, users.id))
         .where(eq(userProfiles.user_id, body.user_id));
 
+    response.avatar = `${imgDomain}${response.avatar}`;
+
     return response;
 };
 
@@ -170,8 +175,13 @@ const postUserAvatars = async (file, body) => {
         .set({ avatar: `avatar/${file.filename}` })
         .where(eq(userProfiles.user_id, body.user_id));
 
-    // Buat response link avatar 
-    const response = { avatar: `avatar/${file.filename}` };
+    // Buat response link avatar
+    const [response] = await db
+        .select({ avatar: userProfiles.avatar })
+        .from(userProfiles)
+        .where(eq(userProfiles.user_id, body.user_id));
+
+    response.avatar = `${imgDomain}${response.avatar}`;
 
     return response;
 };
