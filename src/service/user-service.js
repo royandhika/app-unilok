@@ -125,6 +125,7 @@ const getUserProfile = async (body) => {
 
     if (!response) throw new ResponseError(404, "User not found");
 
+    // Tambah domain di response
     response.avatar = `${imgDomain}${response.avatar}`;
 
     return response;
@@ -162,6 +163,7 @@ const patchUserProfile = async (body) => {
         .leftJoin(users, eq(userProfiles.user_id, users.id))
         .where(eq(userProfiles.user_id, body.user_id));
 
+    // Tambah domain di response
     response.avatar = `${imgDomain}${response.avatar}`;
 
     return response;
@@ -181,6 +183,7 @@ const postUserAvatars = async (file, body) => {
         .from(userProfiles)
         .where(eq(userProfiles.user_id, body.user_id));
 
+    // Tambah domain di response
     response.avatar = `${imgDomain}${response.avatar}`;
 
     return response;

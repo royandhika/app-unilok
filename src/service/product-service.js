@@ -2,6 +2,8 @@ import { asc, desc, eq, and, like, ne } from "drizzle-orm";
 import { colours, productImages, productVariants, products } from "../app/db-schema.js";
 import { db } from "../app/db.js";
 import { ResponseError } from "../error/response-error.js";
+import "dotenv/config";
+const imgDomain = process.env.IMG_DOM;
 
 // Insert colour baru ke master
 const postColour = async (body) => {
@@ -75,7 +77,7 @@ const postProductImage = async (file, param) => {
 
 // Ambil semua gambar dari product
 const getProductImage = async (param) => {
-    const response = await db
+    let response = await db
         .select({
             id: productImages.id,
             url: productImages.url,
@@ -83,6 +85,12 @@ const getProductImage = async (param) => {
         })
         .from(productImages)
         .where(eq(productImages.product_id, param.productId));
+
+    // Tambah domain di response
+    response = response.map((img) => ({
+        ...img,
+        url: `${imgDomain}${img.url}`,
+    }));
 
     return response;
 };
@@ -108,7 +116,7 @@ const patchProductImage = async (param) => {
         .where(and(ne(productImages.id, param.imageId), eq(productImages.product_id, param.productId)));
 
     // Response product images
-    const response = await db
+    let response = await db
         .select({
             id: productImages.id,
             url: productImages.url,
@@ -116,6 +124,12 @@ const patchProductImage = async (param) => {
         })
         .from(productImages)
         .where(eq(productImages.product_id, param.productId));
+
+    // Tambah domain di response
+    response = response.map((img) => ({
+        ...img,
+        url: `${imgDomain}${img.url}`,
+    }));
 
     return response;
 };
@@ -213,7 +227,13 @@ const getProduct = async (query) => {
         queries = queries.offset(parseInt(offset));
     }
 
-    const response = await queries;
+    let response = await queries;
+
+    // Tambah domain di response
+    response = response.map((product) => ({
+        ...product,
+        thumbnail: `${imgDomain}${product.thumbnail}`,
+    }));
 
     return [response, meta];
 };
@@ -258,6 +278,11 @@ const getProductId = async (param) => {
     });
 
     if (!response) throw new ResponseError(404, "Product not found");
+
+    // Tambah domain di response
+    response.productImages = response.productImages.map((img) => ({
+        url: `${imgDomain}${img.url}`,
+    }));
 
     return response;
 };
