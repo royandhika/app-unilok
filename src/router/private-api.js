@@ -12,7 +12,7 @@ privateRouter.use(authMiddleware);
 privateRouter.patch("/v1/users", userController.patchUser);
 privateRouter.get("/v1/users/me/profiles", userController.getUserProfile);
 privateRouter.patch("/v1/users/me/profiles", userController.patchUserProfile);
-privateRouter.post("/v1/users/me/avatars", multerBody, avatarUploader, userController.postUserAvatars);
+privateRouter.post("/v1/users/me/avatar", multerBody, avatarUploader, userController.postUserAvatar);
 privateRouter.post("/v1/users/me/addresses", userController.postUserAddress);
 privateRouter.get("/v1/users/me/addresses", userController.getUserAddress);
 privateRouter.get("/v1/users/me/addresses/:addressId", userController.getUserAddressId);

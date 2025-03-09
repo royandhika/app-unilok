@@ -1,7 +1,7 @@
 import { db } from "../app/db.js";
 import bcrypt from "bcrypt";
 import { users, userProfiles, userAddresses } from "../app/db-schema.js";
-import { validate } from "../util/utility.js";
+import { signToken, validate, verifEmail, verifyToken } from "../util/utility.js";
 import { patchUserValidation, postUserValidation } from "../validation/user-validation.js";
 import { ResponseError } from "../error/response-error.js";
 import { eq, and, ne } from "drizzle-orm";
@@ -48,6 +48,39 @@ const postUser = async (body) => {
         })
         .from(users)
         .where(eq(users.id, insertUser.id));
+
+    const token = await signToken(response, "verif");
+    verifEmail(response.email, token);
+
+    return response;
+};
+
+const getUserVerif = async (param) => {
+    // Verif token
+    const payload = await verifyToken(param);
+
+    if (!payload) throw new ResponseError(401, "Unauthorized");
+
+    // Update verified_email
+    await db
+        .update(users)
+        .set({
+            verified_email: 1,
+        })
+        .where(eq(users.id, payload.user_id));
+
+    // Response balik data users
+    const [response] = await db
+        .select({
+            id: users.id,
+            username: users.username,
+            email: users.email,
+            verified_email: users.verified_email,
+            phone: users.phone,
+            verified_phone: users.verified_phone,
+        })
+        .from(users)
+        .where(eq(users.id, request.user_id));
 
     return response;
 };
@@ -170,7 +203,7 @@ const patchUserProfile = async (body) => {
 };
 
 // Upload avatar
-const postUserAvatars = async (file, body) => {
+const postUserAvatar = async (file, body) => {
     // Simpan nama file ke db
     await db
         .update(userProfiles)
@@ -419,10 +452,11 @@ const deleteUserAddressId = async (param, body) => {
 
 export default {
     postUser,
+    getUserVerif,
     patchUser,
     getUserProfile,
     patchUserProfile,
-    postUserAvatars,
+    postUserAvatar,
     postUserAddress,
     getUserAddress,
     getUserAddressId,

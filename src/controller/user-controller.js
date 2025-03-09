@@ -13,6 +13,19 @@ const postUser = async (req, res, next) => {
     }
 };
 
+const getUserVerif = async (req, res, next) => {
+    try {
+        const response = await userService.getUserVerif(req.params);
+
+        res.status(200).json({
+            data: response,
+            message: "Verification success",
+        });
+    } catch (e) {
+        next(e);
+    }
+};
+
 const patchUser = async (req, res, next) => {
     try {
         const response = await userService.patchUser(req.body);
@@ -49,10 +62,10 @@ const patchUserProfile = async (req, res, next) => {
     }
 };
 
-const postUserAvatars = async (req, res, next) => {
+const postUserAvatar = async (req, res, next) => {
     try {
-        const response = await userService.postUserAvatars(req.file, req.authBody);
-        
+        const response = await userService.postUserAvatar(req.file, req.authBody);
+
         res.status(200).json({
             data: response,
             message: "Upload avatar success",
@@ -126,10 +139,11 @@ const deleteUserAddressId = async (req, res, next) => {
 
 export default {
     postUser,
+    getUserVerif,
     patchUser,
     getUserProfile,
     patchUserProfile,
-    postUserAvatars,
+    postUserAvatar,
     postUserAddress,
     getUserAddress,
     getUserAddressId,
