@@ -104,7 +104,7 @@ const patchCart = async (param, body) => {
     const [cartExist] = await db
         .select()
         .from(cartItems)
-        .where(and(eq(cartItems.id, param.cartId), eq(cartItems.user_id, body.user_id)));
+        .where(and(eq(cartItems.id, param.cartId), eq(cartItems.user_id, body.user_id), gt(cartItems.quantity, 0)));
 
     if (!cartExist) throw new ResponseError(404, "Cart item not found");
 
@@ -135,7 +135,7 @@ const deleteCart = async (param, body) => {
     const [cartExist] = await db
         .select()
         .from(cartItems)
-        .where(and(eq(cartItems.id, param.cartId), eq(cartItems.user_id, body.user_id)));
+        .where(and(eq(cartItems.id, param.cartId), eq(cartItems.user_id, body.user_id), gt(cartItems.quantity, 0)));
 
     if (!cartExist) throw new ResponseError(404, "Cart item not found");
 
