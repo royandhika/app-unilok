@@ -37,7 +37,7 @@ const postUser = async (body) => {
     // Insert ke users
     const [insertUser] = await db.insert(users).values(request).$returningId();
     // Otomatis buat di user_profiles juga
-    await db.insert(userProfiles).values({ user_id: insertUser.id });
+    await db.insert(userProfiles).values({ user_id: insertUser.id, avatar: "avatar/default.jpg" });
 
     // Buat response
     const [response] = await db
@@ -159,7 +159,7 @@ const getUserProfile = async (body) => {
     if (!response) throw new ResponseError(404, "User not found");
 
     // Tambah domain di response
-    response.avatar = `${imgDomain}${response.avatar}`;
+    response.avatar = `${imgDomain}/${response.avatar}`;
 
     return response;
 };
@@ -197,7 +197,7 @@ const patchUserProfile = async (body) => {
         .where(eq(userProfiles.user_id, body.user_id));
 
     // Tambah domain di response
-    response.avatar = `${imgDomain}${response.avatar}`;
+    response.avatar = `${imgDomain}/${response.avatar}`;
 
     return response;
 };
@@ -217,7 +217,7 @@ const postUserAvatar = async (file, body) => {
         .where(eq(userProfiles.user_id, body.user_id));
 
     // Tambah domain di response
-    response.avatar = `${imgDomain}${response.avatar}`;
+    response.avatar = `${imgDomain}/${response.avatar}`;
 
     return response;
 };

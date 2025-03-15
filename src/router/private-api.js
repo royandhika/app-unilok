@@ -4,6 +4,7 @@ import userController from "../controller/user-controller.js";
 import sessionController from "../controller/session-controller.js";
 import productController from "../controller/product-controller.js";
 import orderController from "../controller/order-controller.js";
+import cartController from "../controller/cart-controller.js";
 import { avatarUploader, multerBody, productUploader } from "../middleware/multer-middleware.js";
 
 const privateRouter = new express.Router();
@@ -41,8 +42,10 @@ privateRouter.post("/v1/orders", orderController.postOrder);
 privateRouter.get("/v1/orders", orderController.getOrder);
 privateRouter.get("/v1/orders/:orderId", orderController.getOrderId);
 privateRouter.patch("/v1/orders/:orderId", orderController.patchOrder);
-// post order
-// get order
-// get order id
+// cart
+privateRouter.post("/v1/cart", cartController.postCart);
+privateRouter.get("/v1/cart", cartController.getCart);
+privateRouter.patch("/v1/cart/:cartId", cartController.patchCart);
+privateRouter.delete("/v1/cart/:cartId", cartController.deleteCart);
 
 export { privateRouter };

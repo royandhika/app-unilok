@@ -178,6 +178,20 @@ export const productReviews = mysqlTable("product_reviews", {
     updated_at: timestamp("updated_at").defaultNow().notNull().onUpdateNow(),
 });
 
+// CART ITEMS
+export const cartItems = mysqlTable("cart_items", {
+    id: serial("id").primaryKey(),
+    user_id: bigint("user_id", { mode: "number", unsigned: true })
+        .notNull()
+        .references(() => users.id, { onDelete: "cascade" }),
+    product_variant_id: bigint("product_variant_id", { mode: "number", unsigned: true })
+        .notNull()
+        .references(() => productVariants.id, { onDelete: "cascade" }),
+    quantity: int("quantity").notNull(),
+    created_at: timestamp("created_at").defaultNow().notNull(),
+    updated_at: timestamp("updated_at").defaultNow().notNull().onUpdateNow(),
+});
+
 // RELATIONS
 export const usersRelations = relations(users, ({ one, many }) => ({
     userProfiles: one(userProfiles),
@@ -185,6 +199,7 @@ export const usersRelations = relations(users, ({ one, many }) => ({
     userSessions: many(userSessions),
     productReviews: many(productReviews),
     orders: many(orders),
+    cartItems: many(cartItems),
 }));
 
 export const userProfilesRelations = relations(userProfiles, ({ one }) => ({
@@ -215,7 +230,7 @@ export const productRelations = relations(products, ({ many }) => ({
 }));
 
 export const productImagesRelations = relations(productImages, ({ one }) => ({
-    product: one(products, {
+    products: one(products, {
         fields: [productImages.product_id],
         references: [products.id],
     }),
@@ -226,7 +241,7 @@ export const coloursRelations = relations(colours, ({ many }) => ({
 }));
 
 export const productVariantsRelations = relations(productVariants, ({ one, many }) => ({
-    product: one(products, {
+    products: one(products, {
         fields: [productVariants.product_id],
         references: [products.id],
     }),
@@ -235,6 +250,7 @@ export const productVariantsRelations = relations(productVariants, ({ one, many 
         references: [colours.id],
     }),
     orderItems: many(orderItems),
+    cartItems: many(cartItems),
 }));
 
 export const ordersRelations = relations(orders, ({ one, many }) => ({
@@ -269,5 +285,16 @@ export const productReviewsRelations = relations(productReviews, ({ one }) => ({
     orderItems: one(orderItems, {
         fields: [productReviews.order_item_id],
         references: [orderItems.id],
+    }),
+}));
+
+export const cartItemsRelations = relations(cartItems, ({ one }) => ({
+    users: one(users, {
+        fields: [cartItems.user_id],
+        references: [users.id],
+    }),
+    productVariants: one(productVariants, {
+        fields: [cartItems.product_variant_id],
+        references: [productVariants.id],
     }),
 }));

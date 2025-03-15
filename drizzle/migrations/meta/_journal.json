@@ -43,6 +43,13 @@
       "when": 1740911461658,
       "tag": "0005_serious_leopardon",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1742026836147,
+      "tag": "0006_warm_red_hulk",
+      "breakpoints": true
     }
   ]
 }

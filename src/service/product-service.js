@@ -89,7 +89,7 @@ const getProductImage = async (param) => {
     // Tambah domain di response
     response = response.map((img) => ({
         ...img,
-        url: `${imgDomain}${img.url}`,
+        url: `${imgDomain}/${img.url}`,
     }));
 
     return response;
@@ -128,7 +128,7 @@ const patchProductImage = async (param) => {
     // Tambah domain di response
     response = response.map((img) => ({
         ...img,
-        url: `${imgDomain}${img.url}`,
+        url: `${imgDomain}/${img.url}`,
     }));
 
     return response;
@@ -232,7 +232,7 @@ const getProduct = async (query) => {
     // Tambah domain di response
     response = response.map((product) => ({
         ...product,
-        thumbnail: `${imgDomain}${product.thumbnail}`,
+        thumbnail: `${imgDomain}/${product.thumbnail}`,
     }));
 
     return [response, meta];
@@ -281,7 +281,7 @@ const getProductId = async (param) => {
 
     // Tambah domain di response
     response.productImages = response.productImages.map((img) => ({
-        url: `${imgDomain}${img.url}`,
+        url: `${imgDomain}/${img.url}`,
     }));
 
     return response;
