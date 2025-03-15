@@ -2,6 +2,8 @@ import { db } from "../app/db.js";
 import { eq, and, gt } from "drizzle-orm";
 import { cartItems, productImages } from "../app/db-schema.js";
 import { ResponseError } from "../error/response-error.js";
+import "dotenv/config";
+const imgDomain = process.env.IMG_DOM;
 
 const postCart = async (body) => {
     // Kalau variant id sudah ada, jangan boleh
@@ -56,7 +58,7 @@ const postCart = async (body) => {
 
 const getCart = async (body) => {
     // Get isi cart berdasarkan user id, lengkap dengan detail productnya
-    const response = await db.query.cartItems.findMany({
+    let response = await db.query.cartItems.findMany({
         where: and(eq(cartItems.user_id, body.user_id), gt(cartItems.quantity, 0)),
         columns: {
             id: true,
@@ -95,6 +97,12 @@ const getCart = async (body) => {
             },
         },
     });
+
+    // Tambah domain di response thumbnail
+    response = response.map((cart) => ({
+        ...cart,
+        thumbnail: `${imgDomain}/${cart.productVariants.products.productImages[0].url}`,
+    }));
 
     return response;
 };
