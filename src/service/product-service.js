@@ -255,11 +255,13 @@ const getProductId = async (param) => {
         with: {
             productImages: {
                 columns: {
+                    id: true,
                     url: true,
                 },
             },
             productVariants: {
                 columns: {
+                    id: true,
                     size: true,
                     stock: true,
                     reserved_stock: true,
@@ -268,6 +270,7 @@ const getProductId = async (param) => {
                 with: {
                     colours: {
                         columns: {
+                            id: true,
                             name: true,
                             hex: true,
                         },
@@ -302,6 +305,7 @@ const getProductVariantId = async (param) => {
         with: {
             colours: {
                 columns: {
+                    id: true,
                     name: true,
                     hex: true,
                 },

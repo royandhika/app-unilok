@@ -38,6 +38,7 @@ privateRouter.get("/v1/products", productController.getProduct);
 privateRouter.get("/v1/products/:productId", productController.getProductId);
 privateRouter.get("/v1/products/:productId/variants/:variantId", productController.getProductVariantId);
 // orders
+privateRouter.get("/v1/shipping-cost", orderController.getShippingCost)
 privateRouter.post("/v1/orders", orderController.postOrder);
 privateRouter.get("/v1/orders", orderController.getOrder);
 privateRouter.get("/v1/orders/:orderId", orderController.getOrderId);

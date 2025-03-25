@@ -2,6 +2,41 @@ import { and, eq, sql } from "drizzle-orm";
 import { orderItems, orders, productVariants } from "../app/db-schema.js";
 import { db } from "../app/db.js";
 import { ResponseError } from "../error/response-error.js";
+import axios from "axios";
+import "dotenv/config";
+
+// Ambil shipping cost
+const getShippingCost = async (body) => {
+    const apiKey = process.env.RAJAONGKIR_APIKEY;
+    const originId = process.env.RAJAONGKIR_ORIGIN;
+    const postalCode = body.postal_code;
+    const weight = body.weight;
+
+    const destination = await axios.get(
+        `https://rajaongkir.komerce.id/api/v1/destination/domestic-destination?search=${postalCode}&limit=5&offset=0`,
+        {
+            headers: {
+                key: apiKey,
+            },
+        }
+    );
+    const destinationId = destination.data.data[0].id;
+
+    const bodyRequest = new URLSearchParams();
+    bodyRequest.append("origin", originId);
+    bodyRequest.append("destination", destinationId);
+    bodyRequest.append("courier", "jne:pos");
+    bodyRequest.append("weight", weight);
+    const shippingCost = await axios.post(`https://rajaongkir.komerce.id/api/v1/calculate/domestic-cost`, bodyRequest, {
+        headers: {
+            key: apiKey,
+        },
+    });
+
+    const response = shippingCost.data.data;
+
+    return response;
+};
 
 // Buat order baru
 const postOrder = async (body) => {
@@ -18,7 +53,7 @@ const postOrder = async (body) => {
 
             // Isi harga dari product_variants
             item.price = variant.price;
-            
+
             // Kurangi stock di product_variants
             await tx
                 .update(productVariants)
@@ -103,6 +138,7 @@ const getOrderId = async (param, body) => {
 const patchOrder = async (param, body) => {};
 
 export default {
+    getShippingCost,
     postOrder,
     getOrder,
     getOrderId,

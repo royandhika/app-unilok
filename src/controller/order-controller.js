@@ -1,5 +1,17 @@
 import orderService from "../service/order-service.js";
 
+const getShippingCost = async (req, res, next) => {
+    try {
+        const response = await orderService.getShippingCost(req.body);
+
+        res.status(200).json({
+            data: response,
+        });
+    } catch (e) {
+        next(e);
+    }
+};
+
 const postOrder = async (req, res, next) => {
     try {
         await orderService.postOrder(req.body);
@@ -49,6 +61,7 @@ const patchOrder = async (req, res, next) => {
 };
 
 export default {
+    getShippingCost,
     postOrder,
     getOrder,
     getOrderId,
