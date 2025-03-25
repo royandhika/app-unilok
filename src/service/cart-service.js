@@ -18,7 +18,7 @@ const postCart = async (body) => {
         await db
             .update(cartItems)
             .set({
-                quantity: 1,
+                quantity: body.quantity,
             })
             .where(and(eq(cartItems.user_id, body.user_id), eq(cartItems.product_variant_id, body.product_variant_id)));
 
@@ -35,7 +35,7 @@ const postCart = async (body) => {
             .values({
                 user_id: body.user_id,
                 product_variant_id: body.product_variant_id,
-                quantity: 1,
+                quantity: body.quantity,
             })
             .$returningId();
 
@@ -64,6 +64,7 @@ const getCart = async (body) => {
             id: true,
             user_id: true,
             quantity: true,
+            product_variant_id: true,
         },
         with: {
             productVariants: {
@@ -100,7 +101,17 @@ const getCart = async (body) => {
 
     // Tambah domain di response thumbnail
     response = response.map((cart) => ({
-        ...cart,
+        id: cart.id,
+        user_id: cart.user_id,
+        product_id: cart.productVariants.product_id,
+        product_variant_id: cart.product_variant_id,
+        product_title: cart.productVariants.products.title,
+        quantity: cart.quantity,
+        size: cart.productVariants.size,
+        stock: cart.productVariants.stock,
+        price: cart.productVariants.price,
+        colour_name: cart.productVariants.colours.name,
+        colour_hex: cart.productVariants.colours.hex,
         thumbnail: `${imgDomain}/${cart.productVariants.products.productImages[0].url}`,
     }));
 
