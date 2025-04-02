@@ -284,6 +284,7 @@ const getProductId = async (param) => {
 
     // Tambah domain di response
     response.productImages = response.productImages.map((img) => ({
+        id: img.id,
         url: `${imgDomain}/${img.url}`,
     }));
 

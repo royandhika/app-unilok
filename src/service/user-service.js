@@ -50,7 +50,7 @@ const postUser = async (body) => {
         .where(eq(users.id, insertUser.id));
 
     const token = await signToken(response, "verif");
-    verifEmail(response.email, token);
+    // verifEmail(response.email, token);
 
     return response;
 };
