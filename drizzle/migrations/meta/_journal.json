@@ -50,6 +50,27 @@
       "when": 1742026836147,
       "tag": "0006_warm_red_hulk",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "5",
+      "when": 1743860002567,
+      "tag": "0007_tiresome_johnny_blaze",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "5",
+      "when": 1743860386646,
+      "tag": "0008_daffy_rafael_vega",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "5",
+      "when": 1743860690630,
+      "tag": "0009_optimal_red_hulk",
+      "breakpoints": true
     }
   ]
 }

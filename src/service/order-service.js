@@ -41,6 +41,53 @@ const getShippingCost = async (body) => {
 // Buat order baru
 const postOrder = async (body) => {
     // Buat transaction untuk antisipasi gagal
+    // Ambil shippingcost lagi
+    const apiKey = process.env.RAJAONGKIR_APIKEY;
+    const originId = process.env.RAJAONGKIR_ORIGIN;
+    const postalCode = body.postal_code;
+    const weight = body.weight;
+
+    const destination = await axios.get(
+        `https://rajaongkir.komerce.id/api/v1/destination/domestic-destination?search=${postalCode}&limit=5&offset=0`,
+        {
+            headers: {
+                key: apiKey,
+            },
+        }
+    );
+    const destinationId = destination.data.data[0].id;
+
+    const bodyRequest = new URLSearchParams();
+    bodyRequest.append("origin", originId);
+    bodyRequest.append("destination", destinationId);
+    bodyRequest.append("courier", "jne:pos");
+    bodyRequest.append("weight", weight);
+    const responseOngkir = await axios.post(
+        `https://rajaongkir.komerce.id/api/v1/calculate/domestic-cost`,
+        bodyRequest,
+        {
+            headers: {
+                key: apiKey,
+            },
+        }
+    );
+
+    const shippingCost = responseOngkir.data.data;
+
+    function getShippingCost(list, selected) {
+        const match = list.find(
+            (item) =>
+                item.name === selected.name &&
+                item.code === selected.code &&
+                item.service === selected.service &&
+                item.description === selected.description &&
+                item.etd === selected.etd
+        );
+
+        return match ? match.cost : null;
+    }
+    body.shipping.cost = getShippingCost(shippingCost, body.shipping);
+
     await db.transaction(async (tx) => {
         for (const item of body.items) {
             // Cek sisa stock cukup apa ga
@@ -63,12 +110,23 @@ const postOrder = async (body) => {
                 .where(eq(productVariants.id, item.product_variant_id));
         }
 
+        const totalPrice = body.items.reduce((total, item) => total + item.price, 0);
+
         // Insert ke orders
         const [insertOrder] = await tx
             .insert(orders)
             .values({
                 address_id: body.address_id,
                 user_id: body.user_id,
+                price: totalPrice,
+                shipping_cost: body.shipping.cost,
+                shipping_detail: {
+                    name: body.shipping.name,
+                    code: body.shipping.code,
+                    service: body.shipping.service,
+                    description: body.shipping.description,
+                    etd: body.shipping.etd,
+                },
             })
             .$returningId();
 

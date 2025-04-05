@@ -1,0 +1,1 @@
+ALTER TABLE `order_items` ADD `shipping_cost` bigint NOT NULL;

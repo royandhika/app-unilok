@@ -93,7 +93,7 @@ export const colours = mysqlTable("colours", {
 // PRODUCTS
 export const products = mysqlTable("products", {
     id: serial("id").primaryKey(),
-    title: varchar("title", { length: 30 }).notNull(),
+    title: varchar("title", { length: 80 }).notNull(),
     description: text("description"),
     base_price: bigint("base_price", { mode: "number" }).notNull(),
     category: varchar("category", { length: 20 }).notNull(),
@@ -143,6 +143,9 @@ export const orders = mysqlTable("orders", {
         .notNull()
         .references(() => users.id, { onDelete: "cascade" }),
     status: mysqlEnum("status", ["Pending", "Paid", "Cancelled", "Shipped"]).default("Pending"),
+    price: bigint("price", { mode: "number" }).notNull(),
+    shipping_cost: bigint("shipping_cost", { mode: "number" }).notNull(),
+    shipping_detail: json("shipping_detail").notNull(),
     created_at: timestamp("created_at").defaultNow().notNull(),
     updated_at: timestamp("updated_at").defaultNow().notNull().onUpdateNow(),
 });
@@ -161,6 +164,20 @@ export const orderItems = mysqlTable("order_items", {
     created_at: timestamp("created_at").defaultNow().notNull(),
     updated_at: timestamp("updated_at").defaultNow().notNull().onUpdateNow(),
 });
+
+// // SHIPMENTS
+// export const shipments = mysqlTable("shipments", {
+//     id: serial("id").primaryKey(),
+//     order_id: bigint("order_id", { mode: "number", unsigned: true })
+//         .notNull()
+//         .references(() => orders.id, { onDelete: "cascade" }),
+//     courier: varchar("courier", { length: 20 }).notNull(),
+//     service: varchar("service", { length: 20 }).notNull(),
+//     receipt_number: varchar("receipt_number", { length: 20 }).notNull(),
+//     status: mysqlEnum("status", ["Pending", "Sent", "Delivered"]).default("Pending"),
+//     created_at: timestamp("created_at").defaultNow().notNull(),
+//     updated_at: timestamp("updated_at").defaultNow().notNull().onUpdateNow(),
+// });
 
 // PRODUCT REVIEW
 export const productReviews = mysqlTable("product_reviews", {
