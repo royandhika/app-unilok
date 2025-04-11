@@ -14,10 +14,11 @@ const getShippingCost = async (req, res, next) => {
 
 const postOrder = async (req, res, next) => {
     try {
-        await orderService.postOrder(req.body);
+        const response = await orderService.postOrder(req.body);
 
         res.status(200).json({
             message: "Order created successfully",
+            data: response,
         });
     } catch (e) {
         next(e);

@@ -1,5 +1,5 @@
 import { and, eq, sql } from "drizzle-orm";
-import { orderItems, orders, productVariants } from "../app/db-schema.js";
+import { orderItems, orders, productVariants, users } from "../app/db-schema.js";
 import { db } from "../app/db.js";
 import { ResponseError } from "../error/response-error.js";
 import axios from "axios";
@@ -44,8 +44,10 @@ const postOrder = async (body) => {
     // Ambil shippingcost lagi
     const apiKey = process.env.RAJAONGKIR_APIKEY;
     const originId = process.env.RAJAONGKIR_ORIGIN;
+    const xenditKey = process.env.XENDIT_APIKEY;
     const postalCode = body.postal_code;
     const weight = body.weight;
+    let orderId;
 
     const destination = await axios.get(
         `https://rajaongkir.komerce.id/api/v1/destination/domestic-destination?search=${postalCode}&limit=5&offset=0`,
@@ -129,10 +131,10 @@ const postOrder = async (body) => {
                 },
             })
             .$returningId();
-
+        orderId = insertOrder.id;
         // Kemudian baru insert ke order_items dari id order
         const requestOrderItem = body.items.map((item) => ({
-            order_id: insertOrder.id,
+            order_id: orderId,
             product_variant_id: item.product_variant_id,
             quantity: item.quantity,
             price: item.price,
@@ -140,6 +142,27 @@ const postOrder = async (body) => {
 
         await tx.insert(orderItems).values(requestOrderItem);
     });
+
+    const [invoiceNew] = await db.select().from(orders).where(eq(orders.id, orderId));
+    const [userExist] = await db.select().from(users).where(eq(users.id, body.user_id));
+
+    // Kirim invoice ke xendit
+    const invoiceId = invoiceNew.id.toString().padStart(8, "0");
+    const invoiceBody = {
+        external_id: `invoice-${invoiceId}`,
+        amount: invoiceNew.price + invoiceNew.shipping_cost,
+        payer_email: userExist.email,
+        description: `user${invoiceNew.user_id}-${invoiceNew.address_id}`,
+    };
+
+    const response = await axios.post(`https://api.xendit.co/v2/invoices`, invoiceBody, {
+        auth: {
+            username: xenditKey,
+            password: "",
+        },
+    });
+    
+    return response.data;
 };
 
 // Lihat semua order dari user

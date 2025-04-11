@@ -146,6 +146,7 @@ export const orders = mysqlTable("orders", {
     price: bigint("price", { mode: "number" }).notNull(),
     shipping_cost: bigint("shipping_cost", { mode: "number" }).notNull(),
     shipping_detail: json("shipping_detail").notNull(),
+    shipping_invoice: varchar("shipping_invoice", { length: 50 }),
     created_at: timestamp("created_at").defaultNow().notNull(),
     updated_at: timestamp("updated_at").defaultNow().notNull().onUpdateNow(),
 });

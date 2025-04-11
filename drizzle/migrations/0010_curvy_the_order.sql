@@ -1,0 +1,1 @@
+ALTER TABLE `orders` ADD `shipping_invoice` varchar(50);
