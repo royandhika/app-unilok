@@ -222,10 +222,8 @@ const getProduct = async (query) => {
     };
 
     // Response data
-    if (limit && offset) {
-        queries = queries.limit(parseInt(limit));
-        queries = queries.offset(parseInt(offset));
-    }
+    queries = queries.limit(parseInt(limit));
+    queries = queries.offset(parseInt(offset));
 
     let response = await queries;
 
