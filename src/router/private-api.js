@@ -5,6 +5,7 @@ import sessionController from "../controller/session-controller.js";
 import productController from "../controller/product-controller.js";
 import orderController from "../controller/order-controller.js";
 import cartController from "../controller/cart-controller.js";
+import reviewController from "../controller/review-controller.js";
 import { avatarUploader, multerBody, productUploader } from "../middleware/multer-middleware.js";
 
 const privateRouter = new express.Router();
@@ -38,15 +39,19 @@ privateRouter.get("/v1/products", productController.getProduct);
 privateRouter.get("/v1/products/:productId", productController.getProductId);
 privateRouter.get("/v1/products/:productId/variants/:variantId", productController.getProductVariantId);
 // orders
-privateRouter.get("/v1/shipping-cost", orderController.getShippingCost)
+privateRouter.get("/v1/shipping-cost", orderController.getShippingCost);
 privateRouter.post("/v1/orders", orderController.postOrder);
 privateRouter.get("/v1/orders", orderController.getOrder);
 privateRouter.get("/v1/orders/:orderId", orderController.getOrderId);
 privateRouter.patch("/v1/orders/:orderId", orderController.patchOrder);
+privateRouter.get("/v1/orders-count", orderController.getOrderCount);
 // cart
 privateRouter.post("/v1/cart", cartController.postCart);
 privateRouter.get("/v1/cart", cartController.getCart);
 privateRouter.patch("/v1/cart/:cartId", cartController.patchCart);
 privateRouter.delete("/v1/cart/:cartId", cartController.deleteCart);
+// reviews
+privateRouter.post("/v1/orders/:orderId/items/:itemId/review", reviewController.postReview);
+privateRouter.get("/v1/products/:id/review", reviewController.getReviewByProduct);
 
 export { privateRouter };

@@ -1,0 +1,2 @@
+ALTER TABLE `product_reviews` ADD `product_variant_id` bigint unsigned NOT NULL;--> statement-breakpoint
+ALTER TABLE `product_reviews` ADD CONSTRAINT `product_reviews_product_variant_id_product_variants_id_fk` FOREIGN KEY (`product_variant_id`) REFERENCES `product_variants`(`id`) ON DELETE cascade ON UPDATE no action;

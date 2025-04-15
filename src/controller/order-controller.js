@@ -27,9 +27,10 @@ const postOrder = async (req, res, next) => {
 
 const getOrder = async (req, res, next) => {
     try {
-        const response = await orderService.getOrder(req.body);
+        const [response, meta] = await orderService.getOrder(req.query, req.body);
 
         res.status(200).json({
+            meta: meta,
             data: response,
         });
     } catch (e) {
@@ -51,7 +52,19 @@ const getOrderId = async (req, res, next) => {
 
 const patchOrder = async (req, res, next) => {
     try {
-        const response = await orderService.patchOrder(req.params, req.body);
+        await orderService.patchOrder(req.params, req.body);
+
+        res.status(200).json({
+            message: "Status updated successfully",
+        });
+    } catch (e) {
+        next(e);
+    }
+};
+
+const getOrderCount = async (req, res, next) => {
+    try {
+        const response = await orderService.getOrderCount(req.body);
 
         res.status(200).json({
             data: response,
@@ -67,4 +80,5 @@ export default {
     getOrder,
     getOrderId,
     patchOrder,
+    getOrderCount,
 };

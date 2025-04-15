@@ -144,6 +144,7 @@ export const orders = mysqlTable("orders", {
         .references(() => users.id, { onDelete: "cascade" }),
     status: mysqlEnum("status", ["Pending", "Paid", "Cancelled", "Shipped"]).default("Pending"),
     price: bigint("price", { mode: "number" }).notNull(),
+    invoice_url: text("invoice_url"),
     shipping_cost: bigint("shipping_cost", { mode: "number" }).notNull(),
     shipping_detail: json("shipping_detail").notNull(),
     shipping_invoice: varchar("shipping_invoice", { length: 50 }),
@@ -187,6 +188,9 @@ export const productReviews = mysqlTable("product_reviews", {
         .unique()
         .notNull()
         .references(() => orderItems.id, { onDelete: "cascade" }),
+    product_variant_id: bigint("product_variant_id", { mode: "number", unsigned: true })
+        .notNull()
+        .references(() => productVariants.id, { onDelete: "cascade" }),
     user_id: bigint("user_id", { mode: "number", unsigned: true })
         .notNull()
         .references(() => users.id, { onDelete: "cascade" }),

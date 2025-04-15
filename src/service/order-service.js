@@ -1,9 +1,10 @@
 import { and, eq, sql } from "drizzle-orm";
-import { orderItems, orders, productVariants, users } from "../app/db-schema.js";
+import { orderItems, orders, productImages, productVariants, users, cartItems } from "../app/db-schema.js";
 import { db } from "../app/db.js";
 import { ResponseError } from "../error/response-error.js";
 import axios from "axios";
 import "dotenv/config";
+const imgDomain = process.env.IMG_DOM;
 
 // Ambil shipping cost
 const getShippingCost = async (body) => {
@@ -161,24 +162,58 @@ const postOrder = async (body) => {
             password: "",
         },
     });
-    
+
+    await db.update(orders).set({
+        invoice_url: response.data.invoice_url,
+    });
+
     return response.data;
 };
 
 // Lihat semua order dari user
-const getOrder = async (body) => {
+const getOrder = async (query, body) => {
+    const { status, limit = "10", page = "1" } = query;
+
+    const offset = (parseInt(page) - 1) * parseInt(limit);
+
+    const conditions = [];
+    conditions.push(eq(orders.user_id, body.user_id));
+    if (status) {
+        conditions.push(eq(orders.status, status));
+    }
+
+    const count = await db.query.orders.findMany({
+        where: conditions.length > 0 ? and(...conditions) : undefined,
+        columns: {
+            id: true,
+        },
+        with: {
+            orderItems: {
+                columns: {
+                    id: true,
+                },
+            },
+        },
+    });
+
+
     const response = await db.query.orders.findMany({
-        where: eq(orders.user_id, body.user_id),
+        where: conditions.length > 0 ? and(...conditions) : undefined,
+        limit: parseInt(limit),
+        offset: parseInt(offset),
         columns: {
             id: true,
             user_id: true,
             address_id: true,
             status: true,
+            price: true,
+            invoice_url: true,
             created_at: true,
         },
         with: {
             orderItems: {
                 columns: {
+                    id: true,
                     product_variant_id: true,
                     quantity: true,
                     price: true,
@@ -187,19 +222,35 @@ const getOrder = async (body) => {
         },
     });
 
-    return response;
+    // Meta data
+    const totalItems = `${count.length}`;
+    const totalPages = `${Math.ceil(count.length / limit)}`;
+
+    const meta = {
+        page: page,
+        page_size: limit,
+        total_items: totalItems,
+        total_pages: totalPages,
+    };
+    
+    return [response, meta];
 };
 
 // Lihat detail salah satu order
 const getOrderId = async (param, body) => {
     // Lengkap dengan relasi ke quantity dan harga
-    const response = await db.query.orders.findFirst({
+    let response = await db.query.orders.findFirst({
         where: and(eq(orders.id, param.orderId, eq(orders.user_id, body.user_id))),
         columns: {
             id: true,
             user_id: true,
             address_id: true,
             status: true,
+            price: true,
+            invoice_url: true,
+            shipping_cost: true,
+            shipping_detail: true,
+            shipping_invoice: true,
             created_at: true,
         },
         with: {
@@ -209,14 +260,116 @@ const getOrderId = async (param, body) => {
                     quantity: true,
                     price: true,
                 },
+                with: {
+                    productVariants: {
+                        columns: {
+                            id: true,
+                            product_id: true,
+                            size: true,
+                        },
+                        with: {
+                            colours: {
+                                columns: {
+                                    name: true,
+                                    hex: true,
+                                },
+                            },
+                            products: {
+                                columns: {
+                                    title: true,
+                                },
+                                with: {
+                                    productImages: {
+                                        columns: {
+                                            url: true,
+                                        },
+                                        where: eq(productImages.is_thumbnail, 1),
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
             },
         },
     });
 
+    response = {
+        id: response.id,
+        user_id: response.user_id,
+        address_id: response.address_id,
+        status: response.status,
+        price: response.price,
+        invoice_url: response.invoice_url,
+        shipping_cost: response.shipping_cost,
+        shipping_detail: response.shipping_detail,
+        shipping_invoice: response.shipping_invoice,
+        created_at: response.created_at,
+        productVariants: response.orderItems.map((item) => ({
+            title: item.productVariants.products.title,
+            thumbnail: `${imgDomain}/${item.productVariants.products.productImages[0].url}`,
+            product_variant_id: item.product_variant_id,
+            quantity: item.quantity,
+            price: item.price,
+            colour_name: item.productVariants.colours.name,
+            colour_hex: item.productVariants.colours.hex,
+        })),
+    };
+
     return response;
 };
 
-const patchOrder = async (param, body) => {};
+const patchOrder = async (param, body) => {
+    // Ubah status jadi PAID
+    await db
+        .update(orders)
+        .set({
+            status: body.status,
+        })
+        .where(eq(orders.id, param.orderId));
+};
+
+const getOrderCount = async (body) => {
+    // Hitung Cart
+    // Hitung Order Pending
+    // Hitung Order Paid
+    // Hitung Order Shipped
+    const [cart] = await db
+        .select({
+            count_cart: sql`count(*)`,
+        })
+        .from(cartItems)
+        .where(eq(cartItems.user_id, body.user_id));
+
+    const [pending] = await db
+        .select({
+            count_pending: sql`count(*)`,
+        })
+        .from(orders)
+        .where(and(eq(orders.user_id, body.user_id), eq(orders.status, "Pending")));
+
+    const [paid] = await db
+        .select({
+            count_paid: sql`count(*)`,
+        })
+        .from(orders)
+        .where(and(eq(orders.user_id, body.user_id), eq(orders.status, "Paid")));
+
+    const [shipped] = await db
+        .select({
+            count_shipped: sql`count(*)`,
+        })
+        .from(orders)
+        .where(and(eq(orders.user_id, body.user_id), eq(orders.status, "Shipped")));
+
+    const response = {
+        cart: cart.count_cart,
+        pending: pending.count_pending,
+        paid: paid.count_paid,
+        shipped: shipped.count_shipped,
+    };
+    return response;
+};
 
 export default {
     getShippingCost,
@@ -224,4 +377,5 @@ export default {
     getOrder,
     getOrderId,
     patchOrder,
+    getOrderCount,
 };
