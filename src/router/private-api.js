@@ -7,6 +7,7 @@ import orderController from "../controller/order-controller.js";
 import cartController from "../controller/cart-controller.js";
 import reviewController from "../controller/review-controller.js";
 import { avatarUploader, multerBody, productUploader } from "../middleware/multer-middleware.js";
+import wishlistController from "../controller/wishlist-controller.js";
 
 const privateRouter = new express.Router();
 privateRouter.use(authMiddleware);
@@ -20,6 +21,7 @@ privateRouter.get("/v1/users/me/addresses", userController.getUserAddress);
 privateRouter.get("/v1/users/me/addresses/:addressId", userController.getUserAddressId);
 privateRouter.patch("/v1/users/me/addresses/:addressId", userController.patchUserAddressId);
 privateRouter.delete("/v1/users/me/addresses/:addressId", userController.deleteUserAddressId);
+privateRouter.get("/v1/users/me/wishlist", wishlistController.getAllWishlist);
 // sessions
 privateRouter.post("/v1/users/me/sessions/refresh", sessionController.postSessionRefresh);
 privateRouter.get("/v1/users/me/sessions", sessionController.getSession);
@@ -38,6 +40,8 @@ privateRouter.post("/v1/products/:productId/variants", productController.postPro
 privateRouter.get("/v1/products", productController.getProduct);
 privateRouter.get("/v1/products/:productId", productController.getProductId);
 privateRouter.get("/v1/products/:productId/variants/:variantId", productController.getProductVariantId);
+privateRouter.post("/v1/products/:productId/wishlist", wishlistController.postWishlist);
+privateRouter.get("/v1/products/:productId/wishlist", wishlistController.getWishlist);
 // orders
 privateRouter.get("/v1/shipping-cost", orderController.getShippingCost);
 privateRouter.post("/v1/orders", orderController.postOrder);

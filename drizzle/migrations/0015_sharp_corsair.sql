@@ -1,0 +1,1 @@
+ALTER TABLE `wishlists` RENAME COLUMN `is_thumbnail` TO `is_active`;

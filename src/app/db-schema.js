@@ -214,6 +214,20 @@ export const cartItems = mysqlTable("cart_items", {
     updated_at: timestamp("updated_at").defaultNow().notNull().onUpdateNow(),
 });
 
+// WISHLIST
+export const wishlists = mysqlTable("wishlists", {
+    id: serial("id").primaryKey(),
+    user_id: bigint("user_id", { mode: "number", unsigned: true })
+        .notNull()
+        .references(() => users.id, { onDelete: "cascade" }),
+    product_id: bigint("product_id", { mode: "number", unsigned: true })
+        .notNull()
+        .references(() => products.id, { onDelete: "cascade" }),
+    is_active: tinyint("is_active").notNull(),
+    created_at: timestamp("created_at").defaultNow().notNull(),
+    updated_at: timestamp("updated_at").defaultNow().notNull().onUpdateNow(),
+});
+
 // RELATIONS
 export const usersRelations = relations(users, ({ one, many }) => ({
     userProfiles: one(userProfiles),
@@ -222,6 +236,7 @@ export const usersRelations = relations(users, ({ one, many }) => ({
     productReviews: many(productReviews),
     orders: many(orders),
     cartItems: many(cartItems),
+    wishlists: many(wishlists),
 }));
 
 export const userProfilesRelations = relations(userProfiles, ({ one }) => ({
@@ -249,6 +264,7 @@ export const userSessionsRelations = relations(userSessions, ({ one }) => ({
 export const productRelations = relations(products, ({ many }) => ({
     productImages: many(productImages),
     productVariants: many(productVariants),
+    wishlists: many(wishlists),
 }));
 
 export const productImagesRelations = relations(productImages, ({ one }) => ({
@@ -318,5 +334,16 @@ export const cartItemsRelations = relations(cartItems, ({ one }) => ({
     productVariants: one(productVariants, {
         fields: [cartItems.product_variant_id],
         references: [productVariants.id],
+    }),
+}));
+
+export const wishlistsRelations = relations(wishlists, ({ one }) => ({
+    users: one(users, {
+        fields: [wishlists.user_id],
+        references: [users.id],
+    }),
+    products: one(products, {
+        fields: [wishlists.product_id],
+        references: [products.id],
     }),
 }));
