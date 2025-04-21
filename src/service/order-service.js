@@ -4,6 +4,8 @@ import { db } from "../app/db.js";
 import { ResponseError } from "../error/response-error.js";
 import axios from "axios";
 import "dotenv/config";
+import { connect } from "amqplib";
+import { logger } from "../app/logging.js";
 
 // Ambil shipping cost
 const getShippingCost = async (body) => {
@@ -33,9 +35,28 @@ const getShippingCost = async (body) => {
         },
     });
 
-    const response = shippingCost.data.data;
+    return shippingCost.data.data;
+};
 
-    return response;
+const scheduledDelayedPaymentMessage = async (orderId) => {
+    const connection = await connect(process.env.RABBITMQ_URL);
+    const channel = await connection.createChannel();
+
+    await channel.assertExchange(process.env.RABBITMQ_EXCHANGE, "x-delayed-message", {
+        durable: true,
+        arguments: { "x-delayed-type": "direct" }, // Required for delayed messages
+    });
+    await channel.assertQueue(process.env.RABBITMQ_QUEUE, { durable: true });
+    await channel.bindQueue(process.env.RABBITMQ_QUEUE, process.env.RABBITMQ_EXCHANGE, "");
+
+    await channel.publish(process.env.RABBITMQ_EXCHANGE, "", Buffer.from(JSON.stringify({ orderId: orderId })), {
+        headers: {
+            "x-delay": Number(process.env.PAYMENT_CHECK_DELAY_MS),
+        },
+    });
+
+    await channel.close();
+    await connection.close();
 };
 
 // Buat order baru
@@ -143,6 +164,12 @@ const postOrder = async (body) => {
         await tx.insert(orderItems).values(requestOrderItem);
     });
 
+    logger.error("x");
+
+    await scheduledDelayedPaymentMessage(orderId);
+
+    logger.error("done");
+
     const [invoiceNew] = await db.select().from(orders).where(eq(orders.id, orderId));
     const [userExist] = await db.select().from(users).where(eq(users.id, body.user_id));
 
@@ -161,7 +188,7 @@ const postOrder = async (body) => {
             password: "",
         },
     });
-    
+
     return response.data;
 };
 
