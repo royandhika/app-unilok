@@ -196,7 +196,7 @@ const getOrder = async (query, body) => {
         },
     });
 
-    const response = await db.query.orders.findMany({
+    let response = await db.query.orders.findMany({
         where: conditions.length > 0 ? and(...conditions) : undefined,
         limit: parseInt(limit),
         offset: parseInt(offset),
@@ -220,9 +220,47 @@ const getOrder = async (query, body) => {
                     quantity: true,
                     price: true,
                 },
+                with: {
+                    productVariants: {
+                        columns: {},
+                        with: {
+                            products: {
+                                columns: {},
+                                with: {
+                                    productImages: {
+                                        columns: {
+                                            url: true,
+                                        },
+                                        where: eq(productImages.is_thumbnail, 1),
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
             },
         },
     });
+
+    response = response.map((order) => ({
+        id: order.id,
+        user_id: order.user_id,
+        address_id: order.address_id,
+        status: order.status,
+        price: order.price,
+        invoice_url: order.invoice_url,
+        created_at: order.created_at,
+        shipping_cost: order.shipping_cost,
+        shipping_detail: order.shipping_detail,
+        shipping_invoice: order.shipping_invoice,
+        orderItems: order.orderItems.map((orderItem) => ({
+            id: orderItem.id,
+            product_variant_id: orderItem.product_variant_id,
+            quantity: orderItem.quantity,
+            price: orderItem.price,
+            thumbnail: orderItem.productVariants.products.productImages.url,
+        })),
+    }));
 
     // Meta data
     const totalItems = `${count.length}`;
