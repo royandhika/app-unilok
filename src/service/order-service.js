@@ -222,8 +222,16 @@ const getOrder = async (query, body) => {
                 },
                 with: {
                     productVariants: {
-                        columns: {},
+                        columns: {
+                            size: true,
+                        },
                         with: {
+                            colours: {
+                                columns: {
+                                    name: true,
+                                    hex: true,
+                                },
+                            },
                             products: {
                                 columns: {},
                                 with: {
@@ -258,7 +266,9 @@ const getOrder = async (query, body) => {
             product_variant_id: orderItem.product_variant_id,
             quantity: orderItem.quantity,
             price: orderItem.price,
-            thumbnail: orderItem.productVariants.products.productImages.url,
+            colour_name: orderItem.productVariants.colours.name,
+            colour_hex: orderItem.productVariants.colours.hex,
+            thumbnail: `${imgDomain}/${orderItem.productVariants.products.productImages[0]?.url}`,
         })),
     }));
 
@@ -347,7 +357,7 @@ const getOrderId = async (param, body) => {
         created_at: response.created_at,
         productVariants: response.orderItems.map((item) => ({
             title: item.productVariants.products.title,
-            thumbnail: `${imgDomain}/${item.productVariants.products.productImages[0].url}`,
+            thumbnail: `${imgDomain}/${item.productVariants.products.productImages[0]?.url}`,
             product_variant_id: item.product_variant_id,
             quantity: item.quantity,
             price: item.price,
