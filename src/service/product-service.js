@@ -1,5 +1,5 @@
 import { asc, desc, eq, and, like, ne } from "drizzle-orm";
-import { colours, productImages, productVariants, products } from "../app/db-schema.js";
+import { colours, productImages, productVariants, products, wishlists } from "../app/db-schema.js";
 import { db } from "../app/db.js";
 import { ResponseError } from "../error/response-error.js";
 import "dotenv/config";
@@ -237,7 +237,7 @@ const getProduct = async (query) => {
 };
 
 // Lihat detail dari satu product
-const getProductId = async (param) => {
+const getProductId = async (param, body) => {
     // Lihat products lengkap dengan relasinya untuk lihat detail foto dan stock
     const response = await db.query.products.findFirst({
         where: eq(products.id, param.productId),
@@ -256,6 +256,12 @@ const getProductId = async (param) => {
                     id: true,
                     url: true,
                 },
+            },
+            wishlists: {
+                columns: {
+                    is_active: true,
+                },
+                where: eq(wishlists.user_id, body.user_id),
             },
             productVariants: {
                 columns: {

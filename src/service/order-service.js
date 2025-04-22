@@ -196,7 +196,6 @@ const getOrder = async (query, body) => {
         },
     });
 
-
     const response = await db.query.orders.findMany({
         where: conditions.length > 0 ? and(...conditions) : undefined,
         limit: parseInt(limit),
@@ -209,6 +208,9 @@ const getOrder = async (query, body) => {
             price: true,
             invoice_url: true,
             created_at: true,
+            shipping_cost: true,
+            shipping_detail: true,
+            shipping_invoice: true,
         },
         with: {
             orderItems: {
@@ -232,7 +234,7 @@ const getOrder = async (query, body) => {
         total_items: totalItems,
         total_pages: totalPages,
     };
-    
+
     return [response, meta];
 };
 
