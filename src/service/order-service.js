@@ -1,4 +1,4 @@
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, gt, sql } from "drizzle-orm";
 import { orderItems, orders, productImages, productVariants, users, cartItems } from "../app/db-schema.js";
 import { db } from "../app/db.js";
 import { ResponseError } from "../error/response-error.js";
@@ -339,7 +339,7 @@ const getOrderCount = async (body) => {
             count_cart: sql`count(*)`,
         })
         .from(cartItems)
-        .where(eq(cartItems.user_id, body.user_id));
+        .where(and(eq(cartItems.user_id, body.user_id), gt(cartItems.quantity, 0)));
 
     const [pending] = await db
         .select({
