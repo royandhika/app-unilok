@@ -5,6 +5,7 @@ import sessionController from "../controller/session-controller.js";
 const publicRouter = new express.Router();
 // users
 publicRouter.post("/v1/users", userController.postUser);
+publicRouter.get("/v1/users/verif/:token", userController.getUserVerif);
 // sessions
 publicRouter.post("/v1/users/me/sessions", sessionController.postSession);
 // properties

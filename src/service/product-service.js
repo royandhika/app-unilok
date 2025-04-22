@@ -1,7 +1,9 @@
-import { asc, desc, eq, and, like } from "drizzle-orm";
+import { asc, desc, eq, and, like, ne } from "drizzle-orm";
 import { colours, productImages, productVariants, products } from "../app/db-schema.js";
 import { db } from "../app/db.js";
 import { ResponseError } from "../error/response-error.js";
+import "dotenv/config";
+const imgDomain = process.env.IMG_DOM;
 
 // Insert colour baru ke master
 const postColour = async (body) => {
@@ -18,28 +20,134 @@ const postColour = async (body) => {
     return response;
 };
 
+// Get all colour untuk keperluan admin bikin variant
+const getColour = async () => {
+    const response = await db
+        .select({
+            id: colours.id,
+            name: colours.name,
+            hex: colours.hex,
+        })
+        .from(colours);
+
+    return response;
+};
+
 // Buat product baru (harus satu per satu)
 const postProduct = async (body) => {
-    const [response] = await db.insert(products).values(body).$returningId();
-    
+    const [insertOne] = await db.insert(products).values(body).$returningId();
+
+    const [response] = await db
+        .select({
+            id: products.id,
+            title: products.title,
+            base_price: products.base_price,
+            category: products.category,
+            gender: products.gender,
+            tags: products.tags,
+        })
+        .from(products)
+        .where(eq(products.id, insertOne.id));
+
     // Response dengan product_id
     return response;
 };
 
 // Masukkan gambar dari product
-const postProductImage = async (param, body) => {
+const postProductImage = async (file, param) => {
     // Ubah list jadi object
-    const requestImage = body.images.map((img) => ({
+    let requestImage = file.map((img) => ({
         product_id: param.productId,
-        url: img.url,
-        is_thumbnail: img.is_thumbnail,
+        url: `product/${img.filename}`,
+        is_thumbnail: 0,
     }));
+    // Default thumbnail kalau belum ada
+    const [defaultExist] = await db
+        .select()
+        .from(productImages)
+        .where(and(eq(productImages.product_id, param.productId), eq(productImages.is_thumbnail, 1)));
+    if (!defaultExist) requestImage[0].is_thumbnail = 1;
 
     // Response dengan jumlah rownya
     const [insertMany] = await db.insert(productImages).values(requestImage);
     const response = { count: insertMany.affectedRows };
 
     return response;
+};
+
+// Ambil semua gambar dari product
+const getProductImage = async (param) => {
+    let response = await db
+        .select({
+            id: productImages.id,
+            url: productImages.url,
+            is_thumbnail: productImages.is_thumbnail,
+        })
+        .from(productImages)
+        .where(eq(productImages.product_id, param.productId));
+
+    // Tambah domain di response
+    response = response.map((img) => ({
+        ...img,
+        url: `${imgDomain}/${img.url}`,
+    }));
+
+    return response;
+};
+
+// Update thumbnail product
+const patchProductImage = async (param) => {
+    // Validasi dulu ada ga
+    const [imageExist] = await db
+        .select()
+        .from(productImages)
+        .where(and(eq(productImages.id, param.imageId), eq(productImages.product_id, param.productId)));
+
+    if (!imageExist) throw new ResponseError(404, "Image not found");
+
+    // Update is_thumbnail
+    await db
+        .update(productImages)
+        .set({ is_thumbnail: 1 })
+        .where(and(eq(productImages.id, param.imageId), eq(productImages.product_id, param.productId)));
+    await db
+        .update(productImages)
+        .set({ is_thumbnail: 0 })
+        .where(and(ne(productImages.id, param.imageId), eq(productImages.product_id, param.productId)));
+
+    // Response product images
+    let response = await db
+        .select({
+            id: productImages.id,
+            url: productImages.url,
+            is_thumbnail: productImages.is_thumbnail,
+        })
+        .from(productImages)
+        .where(eq(productImages.product_id, param.productId));
+
+    // Tambah domain di response
+    response = response.map((img) => ({
+        ...img,
+        url: `${imgDomain}/${img.url}`,
+    }));
+
+    return response;
+};
+
+// Hapus gambar
+const deleteProductImage = async (param) => {
+    // Validasi dulu ada ga
+    const [imageExist] = await db
+        .select()
+        .from(productImages)
+        .where(and(eq(productImages.id, param.imageId), eq(productImages.product_id, param.productId)));
+
+    if (!imageExist) throw new ResponseError(404, "Image not found");
+
+    // Hapus gambar
+    await db
+        .delete(productImages)
+        .where(and(eq(productImages.id, param.imageId), eq(productImages.product_id, param.productId)));
 };
 
 // Masukkan variant dari product (informasi stock, warna, harga, dll)
@@ -112,14 +220,20 @@ const getProduct = async (query) => {
         total_items: totalItems,
         total_pages: totalPages,
     };
-    
+
     // Response data
     if (limit && offset) {
         queries = queries.limit(parseInt(limit));
         queries = queries.offset(parseInt(offset));
     }
 
-    const response = await queries;
+    let response = await queries;
+
+    // Tambah domain di response
+    response = response.map((product) => ({
+        ...product,
+        thumbnail: `${imgDomain}/${product.thumbnail}`,
+    }));
 
     return [response, meta];
 };
@@ -141,11 +255,13 @@ const getProductId = async (param) => {
         with: {
             productImages: {
                 columns: {
+                    id: true,
                     url: true,
                 },
             },
             productVariants: {
                 columns: {
+                    id: true,
                     size: true,
                     stock: true,
                     reserved_stock: true,
@@ -154,6 +270,7 @@ const getProductId = async (param) => {
                 with: {
                     colours: {
                         columns: {
+                            id: true,
                             name: true,
                             hex: true,
                         },
@@ -164,6 +281,12 @@ const getProductId = async (param) => {
     });
 
     if (!response) throw new ResponseError(404, "Product not found");
+
+    // Tambah domain di response
+    response.productImages = response.productImages.map((img) => ({
+        id: img.id,
+        url: `${imgDomain}/${img.url}`,
+    }));
 
     return response;
 };
@@ -183,6 +306,7 @@ const getProductVariantId = async (param) => {
         with: {
             colours: {
                 columns: {
+                    id: true,
                     name: true,
                     hex: true,
                 },
@@ -197,8 +321,12 @@ const getProductVariantId = async (param) => {
 
 export default {
     postColour,
+    getColour,
     postProduct,
     postProductImage,
+    getProductImage,
+    patchProductImage,
+    deleteProductImage,
     postProductVariant,
     getProduct,
     getProductId,

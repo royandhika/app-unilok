@@ -59,6 +59,7 @@ export const userAddresses = mysqlTable("user_addresses", {
     notes: varchar("notes", { length: 80 }),
     is_default: tinyint("is_default").default(0),
     flag: mysqlEnum("flag", ["Home", "Office"]).notNull(),
+    is_hidden: tinyint("is_hidden").default(0),
     created_at: timestamp("created_at").defaultNow().notNull(),
     updated_at: timestamp("updated_at").defaultNow().notNull().onUpdateNow(),
 });
@@ -92,12 +93,13 @@ export const colours = mysqlTable("colours", {
 // PRODUCTS
 export const products = mysqlTable("products", {
     id: serial("id").primaryKey(),
-    title: varchar("title", { length: 30 }).notNull(),
+    title: varchar("title", { length: 80 }).notNull(),
     description: text("description"),
-    base_price: decimal("base_price", { precision: 12, scale: 2 }).notNull(),
+    base_price: bigint("base_price", { mode: "number" }).notNull(),
     category: varchar("category", { length: 20 }).notNull(),
     gender: varchar("gender", { length: 20 }).notNull(),
     tags: json("tags").notNull(),
+    is_hidden: tinyint("is_hidden").default(1),
     created_at: timestamp("created_at").defaultNow().notNull(),
     updated_at: timestamp("updated_at").defaultNow().notNull().onUpdateNow(),
 });
@@ -126,7 +128,7 @@ export const productVariants = mysqlTable("product_variants", {
     size: varchar("size", { length: 10 }).notNull(),
     stock: int("stock").notNull(),
     reserved_stock: int("reserved_stock").notNull(),
-    price: decimal("price", { precision: 12, scale: 2 }).notNull(),
+    price: bigint("price", { mode: "number" }).notNull(),
     created_at: timestamp("created_at").defaultNow().notNull(),
     updated_at: timestamp("updated_at").defaultNow().notNull().onUpdateNow(),
 });
@@ -141,6 +143,10 @@ export const orders = mysqlTable("orders", {
         .notNull()
         .references(() => users.id, { onDelete: "cascade" }),
     status: mysqlEnum("status", ["Pending", "Paid", "Cancelled", "Shipped"]).default("Pending"),
+    price: bigint("price", { mode: "number" }).notNull(),
+    shipping_cost: bigint("shipping_cost", { mode: "number" }).notNull(),
+    shipping_detail: json("shipping_detail").notNull(),
+    shipping_invoice: varchar("shipping_invoice", { length: 50 }),
     created_at: timestamp("created_at").defaultNow().notNull(),
     updated_at: timestamp("updated_at").defaultNow().notNull().onUpdateNow(),
 });
@@ -155,10 +161,24 @@ export const orderItems = mysqlTable("order_items", {
         .notNull()
         .references(() => productVariants.id, { onDelete: "cascade" }),
     quantity: int("quantity").notNull(),
-    price: decimal("price", { precision: 10, scale: 2 }).notNull(),
+    price: bigint("price", { mode: "number" }).notNull(),
     created_at: timestamp("created_at").defaultNow().notNull(),
     updated_at: timestamp("updated_at").defaultNow().notNull().onUpdateNow(),
 });
+
+// // SHIPMENTS
+// export const shipments = mysqlTable("shipments", {
+//     id: serial("id").primaryKey(),
+//     order_id: bigint("order_id", { mode: "number", unsigned: true })
+//         .notNull()
+//         .references(() => orders.id, { onDelete: "cascade" }),
+//     courier: varchar("courier", { length: 20 }).notNull(),
+//     service: varchar("service", { length: 20 }).notNull(),
+//     receipt_number: varchar("receipt_number", { length: 20 }).notNull(),
+//     status: mysqlEnum("status", ["Pending", "Sent", "Delivered"]).default("Pending"),
+//     created_at: timestamp("created_at").defaultNow().notNull(),
+//     updated_at: timestamp("updated_at").defaultNow().notNull().onUpdateNow(),
+// });
 
 // PRODUCT REVIEW
 export const productReviews = mysqlTable("product_reviews", {
@@ -176,6 +196,20 @@ export const productReviews = mysqlTable("product_reviews", {
     updated_at: timestamp("updated_at").defaultNow().notNull().onUpdateNow(),
 });
 
+// CART ITEMS
+export const cartItems = mysqlTable("cart_items", {
+    id: serial("id").primaryKey(),
+    user_id: bigint("user_id", { mode: "number", unsigned: true })
+        .notNull()
+        .references(() => users.id, { onDelete: "cascade" }),
+    product_variant_id: bigint("product_variant_id", { mode: "number", unsigned: true })
+        .notNull()
+        .references(() => productVariants.id, { onDelete: "cascade" }),
+    quantity: int("quantity").notNull(),
+    created_at: timestamp("created_at").defaultNow().notNull(),
+    updated_at: timestamp("updated_at").defaultNow().notNull().onUpdateNow(),
+});
+
 // RELATIONS
 export const usersRelations = relations(users, ({ one, many }) => ({
     userProfiles: one(userProfiles),
@@ -183,6 +217,7 @@ export const usersRelations = relations(users, ({ one, many }) => ({
     userSessions: many(userSessions),
     productReviews: many(productReviews),
     orders: many(orders),
+    cartItems: many(cartItems),
 }));
 
 export const userProfilesRelations = relations(userProfiles, ({ one }) => ({
@@ -213,7 +248,7 @@ export const productRelations = relations(products, ({ many }) => ({
 }));
 
 export const productImagesRelations = relations(productImages, ({ one }) => ({
-    product: one(products, {
+    products: one(products, {
         fields: [productImages.product_id],
         references: [products.id],
     }),
@@ -224,7 +259,7 @@ export const coloursRelations = relations(colours, ({ many }) => ({
 }));
 
 export const productVariantsRelations = relations(productVariants, ({ one, many }) => ({
-    product: one(products, {
+    products: one(products, {
         fields: [productVariants.product_id],
         references: [products.id],
     }),
@@ -233,6 +268,7 @@ export const productVariantsRelations = relations(productVariants, ({ one, many 
         references: [colours.id],
     }),
     orderItems: many(orderItems),
+    cartItems: many(cartItems),
 }));
 
 export const ordersRelations = relations(orders, ({ one, many }) => ({
@@ -267,5 +303,16 @@ export const productReviewsRelations = relations(productReviews, ({ one }) => ({
     orderItems: one(orderItems, {
         fields: [productReviews.order_item_id],
         references: [orderItems.id],
+    }),
+}));
+
+export const cartItemsRelations = relations(cartItems, ({ one }) => ({
+    users: one(users, {
+        fields: [cartItems.user_id],
+        references: [users.id],
+    }),
+    productVariants: one(productVariants, {
+        fields: [cartItems.product_variant_id],
+        references: [productVariants.id],
     }),
 }));

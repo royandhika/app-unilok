@@ -13,6 +13,18 @@ const postColour = async (req, res, next) => {
     }
 };
 
+const getColour = async (req, res, next) => {
+    try {
+        const response = await productService.getColour();
+
+        res.status(200).json({
+            data: response,
+        });
+    } catch (e) {
+        next(e);
+    }
+};
+
 const postProduct = async (req, res, next) => {
     try {
         const response = await productService.postProduct(req.body);
@@ -28,11 +40,47 @@ const postProduct = async (req, res, next) => {
 
 const postProductImage = async (req, res, next) => {
     try {
-        const response = await productService.postProductImage(req.params, req.body);
+        const response = await productService.postProductImage(req.files, req.params);
 
         res.status(200).json({
             data: response,
             message: "Submit product image(s) success",
+        });
+    } catch (e) {
+        next(e);
+    }
+};
+
+const getProductImage = async (req, res, next) => {
+    try {
+        const response = await productService.getProductImage(req.params);
+
+        res.status(200).json({
+            data: response,
+        });
+    } catch (e) {
+        next(e);
+    }
+};
+
+const patchProductImage = async (req, res, next) => {
+    try {
+        const response = await productService.patchProductImage(req.params);
+
+        res.status(200).json({
+            data: response,
+        });
+    } catch (e) {
+        next(e);
+    }
+};
+
+const deleteProductImage = async (req, res, next) => {
+    try {
+        await productService.deleteProductImage(req.params);
+
+        res.status(200).json({
+            message: "Delete success",
         });
     } catch (e) {
         next(e);
@@ -91,8 +139,12 @@ const getProductVariantId = async (req, res, next) => {
 
 export default {
     postColour,
+    getColour,
     postProduct,
     postProductImage,
+    getProductImage,
+    patchProductImage,
+    deleteProductImage,
     postProductVariant,
     getProduct,
     getProductId,

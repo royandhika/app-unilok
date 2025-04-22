@@ -1,0 +1,1 @@
+ALTER TABLE `user_addresses` ADD `is_hidden` tinyint DEFAULT 0;
