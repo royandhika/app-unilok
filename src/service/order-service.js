@@ -233,7 +233,9 @@ const getOrder = async (query, body) => {
                                 },
                             },
                             products: {
-                                columns: {},
+                                columns: {
+                                    title: true,
+                                },
                                 with: {
                                     productImages: {
                                         columns: {
@@ -263,6 +265,7 @@ const getOrder = async (query, body) => {
         shipping_invoice: order.shipping_invoice,
         orderItems: order.orderItems.map((orderItem) => ({
             id: orderItem.id,
+            title: orderItem.productVariants.products.title,
             product_variant_id: orderItem.product_variant_id,
             quantity: orderItem.quantity,
             price: orderItem.price,
